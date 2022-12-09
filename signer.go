@@ -25,7 +25,10 @@ func NewMJwtSigner(issuer string, key *rsa.PrivateKey) Provider {
 func (d *defaultMJwtSigner) Issuer() string { return d.issuer }
 
 func (d *defaultMJwtSigner) GenerateJwt(sub, id string, dur time.Duration, claims Claims) (string, error) {
-	wrapped := wrapClaims[Claims](d, sub, id, dur, claims)
+	return d.SignJwt(wrapClaims[Claims](d, sub, id, dur, claims))
+}
+
+func (d *defaultMJwtSigner) SignJwt(wrapped jwt.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, wrapped)
 	return token.SignedString(d.key)
 }
