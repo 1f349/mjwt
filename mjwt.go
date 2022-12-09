@@ -12,6 +12,7 @@ var ErrClaimTypeMismatch = errors.New("claim type mismatch")
 
 type Provider interface {
 	GenerateJwt(sub, id string, dur time.Duration, claims Claims) (string, error)
+	SignJwt(claims jwt.Claims) (string, error)
 	VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, error)
 	Issuer() string
 }

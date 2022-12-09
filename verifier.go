@@ -45,6 +45,10 @@ func (d *defaultMJwtVerifier) GenerateJwt(_, _ string, _ time.Duration, _ Claims
 	return "", ErrCannotGenerateMJwtToken
 }
 
+func (d *defaultMJwtVerifier) SignJwt(_ jwt.Claims) (string, error) {
+	return "", ErrCannotGenerateMJwtToken
+}
+
 func (d *defaultMJwtVerifier) VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, error) {
 	withClaims, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 		return d.pub, nil
