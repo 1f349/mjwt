@@ -12,9 +12,9 @@ type defaultMJwtSigner struct {
 	verify *defaultMJwtVerifier
 }
 
-var _ Provider = &defaultMJwtSigner{}
+var _ Signer = &defaultMJwtSigner{}
 
-func NewMJwtSigner(issuer string, key *rsa.PrivateKey) Provider {
+func NewMJwtSigner(issuer string, key *rsa.PrivateKey) Signer {
 	return &defaultMJwtSigner{
 		issuer: issuer,
 		key:    key,

@@ -16,9 +16,9 @@ type defaultMJwtVerifier struct {
 	pub *rsa.PublicKey
 }
 
-var _ Provider = &defaultMJwtVerifier{}
+var _ Verifier = &defaultMJwtVerifier{}
 
-func NewMJwtVerifier(key *rsa.PublicKey) Provider {
+func NewMJwtVerifier(key *rsa.PublicKey) Verifier {
 	return newMJwtVerifier(key)
 }
 
@@ -26,7 +26,7 @@ func newMJwtVerifier(key *rsa.PublicKey) *defaultMJwtVerifier {
 	return &defaultMJwtVerifier{pub: key}
 }
 
-func NewMJwtVerifierFromFile(file string) (Provider, error) {
+func NewMJwtVerifierFromFile(file string) (Verifier, error) {
 	f, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
