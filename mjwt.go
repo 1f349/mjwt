@@ -1,7 +1,6 @@
 package mjwt
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
@@ -48,6 +47,8 @@ type baseTypeClaim interface {
 	InternalClaimType() string
 }
 
+// BaseTypeClaims is a wrapper for combining the jwt.RegisteredClaims with a ClaimType
+// and generic Claims data
 type BaseTypeClaims[T Claims] struct {
 	jwt.RegisteredClaims
 	ClaimType string
@@ -59,6 +60,7 @@ func (b *BaseTypeClaims[T]) init() *BaseTypeClaims[T] {
 	return b
 }
 
+// Valid checks the InternalClaimType matches and the type claim type
 func (b *BaseTypeClaims[T]) Valid() error {
 	if b.ClaimType != b.InternalClaimType() {
 		return ErrClaimTypeMismatch
@@ -66,61 +68,60 @@ func (b *BaseTypeClaims[T]) Valid() error {
 	return b.Claims.Valid()
 }
 
-func (b *BaseTypeClaims[T]) InternalClaimType() string {
-	return b.Claims.Type()
-}
+// InternalClaimType returns the Type of the generic claim struct
+func (b *BaseTypeClaims[T]) InternalClaimType() string { return b.Claims.Type() }
 
+// MarshalJSON converts the internalBaseTypeClaims and generic claim struct into
+// a serialized JSON byte array
 func (b *BaseTypeClaims[T]) MarshalJSON() ([]byte, error) {
-	// setup buffers
-	buf := new(bytes.Buffer)
-	buf2 := new(bytes.Buffer)
-
-	// encode into both buffers
-	err := json.NewEncoder(buf).Encode(internalBaseTypeClaims{
+	// encode the internalBaseTypeClaims
+	b1, err := json.Marshal(internalBaseTypeClaims{
 		RegisteredClaims: b.RegisteredClaims,
 		ClaimType:        b.InternalClaimType(),
 	})
 	if err != nil {
 		return nil, err
 	}
-	err = json.NewEncoder(buf2).Encode(b.Claims)
+
+	// encode the generic claims struct
+	b2, err := json.Marshal(b.Claims)
 	if err != nil {
 		return nil, err
 	}
 
-	// decode into a single map
-	var a map[string]any
-	err = json.NewDecoder(buf).Decode(&a)
-	if err != nil {
-		return nil, err
-	}
-	err = json.NewDecoder(buf2).Decode(&a)
-	if err != nil {
-		return nil, err
-	}
-
-	// encode to output
-	return json.Marshal(a)
+	// replace starting '{' with ','
+	b2[0] = ','
+	// join the two json strings and remove the last char '}' from the first string
+	return append(b1[:len(b1)-1], b2...), nil
 }
 
+// UnmarshalJSON reads the internalBaseTypeClaims and generic claim struct from
+// a serialized JSON byte array
 func (b *BaseTypeClaims[T]) UnmarshalJSON(bytes []byte) error {
 	a := internalBaseTypeClaims{}
 	var t T
+
+	// convert JSON to internalBaseTypeClaims
 	err := json.Unmarshal(bytes, &a)
 	if err != nil {
 		return err
 	}
+
+	// convert JSON to the generic claim struct
 	err = json.Unmarshal(bytes, &t)
 	if err != nil {
 		return err
 	}
 
+	// assign the fields in BaseTypeClaims
 	b.RegisteredClaims = a.RegisteredClaims
 	b.ClaimType = a.ClaimType
 	b.Claims = t
 	return err
 }
 
+// internalBaseTypeClaims is a wrapper for jwt.RegisteredClaims which adds a
+// ClaimType field containing the type of the generic claim struct
 type internalBaseTypeClaims struct {
 	jwt.RegisteredClaims
 	ClaimType string `json:"mct"`
