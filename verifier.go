@@ -5,13 +5,10 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/pkg/errors"
 	"os"
 )
 
-var ErrCannotGenerateMJwtToken = errors.New("cannot generate mjwt token with verifier")
-
-// defaultMJwtVerifier implements Verifier and uses an rsa.PublicKey to validate
+// defaultMJwtVerifier implements Verifier and uses a rsa.PublicKey to validate
 // MJWT tokens
 type defaultMJwtVerifier struct {
 	pub *rsa.PublicKey

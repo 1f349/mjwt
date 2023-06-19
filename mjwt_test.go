@@ -12,7 +12,7 @@ import (
 type testClaims struct{ TestValue string }
 
 func (t testClaims) Valid() error {
-	if t.TestValue != "hello" {
+	if t.TestValue != "hello" && t.TestValue != "world" {
 		return fmt.Errorf("TestValue should be hello")
 	}
 	return nil
