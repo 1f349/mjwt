@@ -19,14 +19,13 @@ func TestCreateTokenPair(t *testing.T) {
 
 	s := mjwt.NewMJwtSigner("mjwt.test", key)
 
-	accessToken, refreshToken, err := CreateTokenPair(s, "1", "test", 1, ps)
+	accessToken, refreshToken, err := CreateTokenPair(s, "1", "test", "test2", nil, nil, ps)
 	assert.NoError(t, err)
 
 	_, b, err := mjwt.ExtractClaims[AccessTokenClaims](s, accessToken)
 	assert.NoError(t, err)
 	assert.Equal(t, "1", b.Subject)
 	assert.Equal(t, "test", b.ID)
-	assert.Equal(t, uint64(1), b.Claims.UserId)
 	assert.True(t, b.Claims.Perms.Has("mjwt:test"))
 	assert.True(t, b.Claims.Perms.Has("mjwt:test2"))
 	assert.False(t, b.Claims.Perms.Has("mjwt:test3"))
@@ -34,9 +33,5 @@ func TestCreateTokenPair(t *testing.T) {
 	_, b2, err := mjwt.ExtractClaims[RefreshTokenClaims](s, refreshToken)
 	assert.NoError(t, err)
 	assert.Equal(t, "1", b2.Subject)
-	assert.Equal(t, "test", b2.ID)
-	assert.Equal(t, uint64(1), b2.Claims.UserId)
-	assert.True(t, b2.Claims.Perms.Has("mjwt:test"))
-	assert.True(t, b2.Claims.Perms.Has("mjwt:test2"))
-	assert.False(t, b2.Claims.Perms.Has("mjwt:test3"))
+	assert.Equal(t, "test2", b2.ID)
 }

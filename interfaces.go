@@ -9,7 +9,7 @@ import (
 // Signer can also be used as a Verifier.
 type Signer interface {
 	Verifier
-	GenerateJwt(sub, id string, dur time.Duration, claims Claims) (string, error)
+	GenerateJwt(sub, id string, aud jwt.ClaimStrings, dur time.Duration, claims Claims) (string, error)
 	SignJwt(claims jwt.Claims) (string, error)
 	Issuer() string
 }

@@ -10,12 +10,13 @@ import (
 var ErrClaimTypeMismatch = errors.New("claim type mismatch")
 
 // wrapClaims creates a BaseTypeClaims wrapper for a generic claims struct
-func wrapClaims[T Claims](p Signer, sub, id string, dur time.Duration, claims T) *BaseTypeClaims[T] {
+func wrapClaims[T Claims](p Signer, sub, id string, aud jwt.ClaimStrings, dur time.Duration, claims T) *BaseTypeClaims[T] {
 	now := time.Now()
 	return (&BaseTypeClaims[T]{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    p.Issuer(),
 			Subject:   sub,
+			Audience:  aud,
 			ExpiresAt: jwt.NewNumericDate(now.Add(dur)),
 			NotBefore: jwt.NewNumericDate(now),
 			IssuedAt:  jwt.NewNumericDate(now),

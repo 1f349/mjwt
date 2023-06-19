@@ -29,8 +29,8 @@ func NewMJwtSigner(issuer string, key *rsa.PrivateKey) Signer {
 func (d *defaultMJwtSigner) Issuer() string { return d.issuer }
 
 // GenerateJwt generates and returns a JWT string using the sub, id, duration and claims
-func (d *defaultMJwtSigner) GenerateJwt(sub, id string, dur time.Duration, claims Claims) (string, error) {
-	return d.SignJwt(wrapClaims[Claims](d, sub, id, dur, claims))
+func (d *defaultMJwtSigner) GenerateJwt(sub, id string, aud jwt.ClaimStrings, dur time.Duration, claims Claims) (string, error) {
+	return d.SignJwt(wrapClaims[Claims](d, sub, id, aud, dur, claims))
 }
 
 // SignJwt signs a jwt.Claims compatible struct, this is used internally by

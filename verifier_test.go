@@ -16,7 +16,7 @@ func TestNewMJwtVerifierFromFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	s := NewMJwtSigner("mjwt.test", key)
-	token, err := s.GenerateJwt("1", "test", 10*time.Minute, testClaims{TestValue: "world"})
+	token, err := s.GenerateJwt("1", "test", nil, 10*time.Minute, testClaims{TestValue: "world"})
 	assert.NoError(t, err)
 
 	b := pem.EncodeToMemory(&pem.Block{Type: "RSA PUBLIC KEY", Bytes: x509.MarshalPKCS1PublicKey(&key.PublicKey)})

@@ -36,7 +36,7 @@ func TestExtractClaims(t *testing.T) {
 	assert.NoError(t, err)
 
 	s := NewMJwtSigner("mjwt.test", key)
-	token, err := s.GenerateJwt("1", "test", 10*time.Minute, testClaims{TestValue: "hello"})
+	token, err := s.GenerateJwt("1", "test", nil, 10*time.Minute, testClaims{TestValue: "hello"})
 	assert.NoError(t, err)
 
 	m := NewMJwtVerifier(&key.PublicKey)
@@ -49,7 +49,7 @@ func TestExtractClaimsFail(t *testing.T) {
 	assert.NoError(t, err)
 
 	s := NewMJwtSigner("mjwt.test", key)
-	token, err := s.GenerateJwt("1", "test", 10*time.Minute, testClaims{TestValue: "test"})
+	token, err := s.GenerateJwt("1", "test", nil, 10*time.Minute, testClaims{TestValue: "test"})
 	assert.NoError(t, err)
 
 	m := NewMJwtVerifier(&key.PublicKey)
