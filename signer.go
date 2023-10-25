@@ -18,6 +18,7 @@ type defaultMJwtSigner struct {
 }
 
 var _ Signer = &defaultMJwtSigner{}
+var _ Verifier = &defaultMJwtSigner{}
 
 // NewMJwtSigner creates a new defaultMJwtSigner using the issuer name and rsa.PrivateKey
 func NewMJwtSigner(issuer string, key *rsa.PrivateKey) Signer {
@@ -72,6 +73,9 @@ func (d *defaultMJwtSigner) SignJwt(wrapped jwt.Claims) (string, error) {
 func (d *defaultMJwtSigner) VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, error) {
 	return d.verify.VerifyJwt(token, claims)
 }
+
+func (d *defaultMJwtSigner) PrivateKey() *rsa.PrivateKey { return d.key }
+func (d *defaultMJwtSigner) PublicKey() *rsa.PublicKey   { return d.verify.pub }
 
 // readOrCreatePrivateKey returns the private key it the file already exists,
 // generates a new private key and saves it to the file, or returns an error if

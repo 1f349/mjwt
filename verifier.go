@@ -57,3 +57,5 @@ func (d *defaultMJwtVerifier) VerifyJwt(token string, claims baseTypeClaim) (*jw
 	}
 	return withClaims, claims.Valid()
 }
+
+func (d *defaultMJwtVerifier) PublicKey() *rsa.PublicKey { return d.pub }
