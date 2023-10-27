@@ -3,7 +3,8 @@ module github.com/MrMelon54/mjwt
 go 1.19
 
 require (
-	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/becheran/wildmatch-go v1.0.0
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/subcommands v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4

@@ -2,6 +2,7 @@ package claims
 
 import (
 	"encoding/json"
+	"github.com/becheran/wildmatch-go"
 	"gopkg.in/yaml.v3"
 	"sort"
 )
@@ -43,12 +44,23 @@ func (p *PermStorage) OneOf(o *PermStorage) bool {
 	return false
 }
 
-func (p *PermStorage) dump() []string {
+func (p *PermStorage) Dump() []string {
 	var a []string
 	for i := range p.values {
 		a = append(a, i)
 	}
 	sort.Strings(a)
+	return a
+}
+
+func (p *PermStorage) Search(v string) []string {
+	m := wildmatch.NewWildMatch(v)
+	var a []string
+	for i := range p.values {
+		if m.IsMatch(i) {
+			a = append(a, i)
+		}
+	}
 	return a
 }
 
@@ -58,7 +70,7 @@ func (p *PermStorage) prepare(a []string) {
 	}
 }
 
-func (p *PermStorage) MarshalJSON() ([]byte, error) { return json.Marshal(p.dump()) }
+func (p *PermStorage) MarshalJSON() ([]byte, error) { return json.Marshal(p.Dump()) }
 
 func (p *PermStorage) UnmarshalJSON(bytes []byte) error {
 	p.setup()
@@ -71,7 +83,7 @@ func (p *PermStorage) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-func (p *PermStorage) MarshalYAML() (interface{}, error) { return yaml.Marshal(p.dump()) }
+func (p *PermStorage) MarshalYAML() (interface{}, error) { return yaml.Marshal(p.Dump()) }
 
 func (p *PermStorage) UnmarshalYAML(value *yaml.Node) error {
 	p.setup()
