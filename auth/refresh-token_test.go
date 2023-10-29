@@ -3,12 +3,13 @@ package auth
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"github.com/MrMelon54/mjwt"
+	"github.com/1f349/mjwt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestCreateRefreshToken(t *testing.T) {
+	t.Parallel()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
 

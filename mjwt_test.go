@@ -32,6 +32,7 @@ func (t testClaims2) Valid() error {
 func (t testClaims2) Type() string { return "testClaims2" }
 
 func TestExtractClaims(t *testing.T) {
+	t.Parallel()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
 
@@ -45,6 +46,7 @@ func TestExtractClaims(t *testing.T) {
 }
 
 func TestExtractClaimsFail(t *testing.T) {
+	t.Parallel()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
 

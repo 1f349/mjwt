@@ -3,6 +3,8 @@ package mjwt
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/pem"
+	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"io"
 	"os"
@@ -43,14 +45,25 @@ func NewMJwtSignerFromFileOrCreate(issuer, file string, random io.Reader, bits i
 // NewMJwtSignerFromFile creates a new defaultMJwtSigner using the path of a
 // rsa.PrivateKey file.
 func NewMJwtSignerFromFile(issuer, file string) (Signer, error) {
+	// read file
 	raw, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
-	key, err := x509.ParsePKCS1PrivateKey(raw)
+
+	// decode pem block
+	block, _ := pem.Decode(raw)
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return nil, fmt.Errorf("invalid rsa private key pem block")
+	}
+
+	// parse private key from pem block
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
+
+	// create signer using rsa.PrivateKey
 	return NewMJwtSigner(issuer, key), nil
 }
 
@@ -93,12 +106,26 @@ func readOrCreatePrivateKey(file string, random io.Reader, bits int) (*rsa.Priva
 			return nil, err
 		}
 
+		keyBytes := pem.EncodeToMemory(&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(key),
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		// write the key to the file
-		err = os.WriteFile(file, x509.MarshalPKCS1PrivateKey(key), 0600)
+		err = os.WriteFile(file, keyBytes, 0600)
 		return key, err
 	} else {
+		// decode pem block
+		block, _ := pem.Decode(f)
+		if block == nil || block.Type != "RSA PRIVATE KEY" {
+			return nil, fmt.Errorf("invalid rsa private key pem block")
+		}
+
 		// try to parse the private key
-		return x509.ParsePKCS1PrivateKey(f)
+		return x509.ParsePKCS1PrivateKey(block.Bytes)
 	}
 }
 

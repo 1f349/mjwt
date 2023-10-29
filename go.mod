@@ -1,4 +1,4 @@
-module github.com/MrMelon54/mjwt
+module github.com/1f349/mjwt
 
 go 1.19
 

@@ -7,6 +7,7 @@ import (
 )
 
 func TestPermStorage_Set(t *testing.T) {
+	t.Parallel()
 	ps := NewPermStorage()
 	ps.Set("mjwt:test")
 	if _, ok := ps.values["mjwt:test"]; !ok {
@@ -15,6 +16,7 @@ func TestPermStorage_Set(t *testing.T) {
 }
 
 func TestPermStorage_Clear(t *testing.T) {
+	t.Parallel()
 	ps := NewPermStorage()
 	ps.values["mjwt:test"] = struct{}{}
 	ps.Clear("mjwt:test")
@@ -24,6 +26,7 @@ func TestPermStorage_Clear(t *testing.T) {
 }
 
 func TestPermStorage_Has(t *testing.T) {
+	t.Parallel()
 	ps := NewPermStorage()
 	assert.False(t, ps.Has("mjwt:test"))
 	ps.values["mjwt:test"] = struct{}{}
@@ -31,6 +34,7 @@ func TestPermStorage_Has(t *testing.T) {
 }
 
 func TestPermStorage_OneOf(t *testing.T) {
+	t.Parallel()
 	o := NewPermStorage()
 	o.Set("mjwt:test")
 	o.Set("mjwt:test2")
@@ -48,6 +52,7 @@ func TestPermStorage_OneOf(t *testing.T) {
 }
 
 func TestPermStorage_MarshalJSON(t *testing.T) {
+	t.Parallel()
 	ps := NewPermStorage()
 	ps.Set("mjwt:test")
 	ps.Set("mjwt:test2")
@@ -57,6 +62,7 @@ func TestPermStorage_MarshalJSON(t *testing.T) {
 }
 
 func TestPermStorage_MarshalYAML(t *testing.T) {
+	t.Parallel()
 	ps := NewPermStorage()
 	ps.Set("mjwt:test")
 	ps.Set("mjwt:test2")

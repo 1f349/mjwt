@@ -12,6 +12,7 @@ import (
 )
 
 func TestNewMJwtVerifierFromFile(t *testing.T) {
+	t.Parallel()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
 

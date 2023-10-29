@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/MrMelon54/mjwt"
+	"github.com/1f349/mjwt"
 	"github.com/golang-jwt/jwt/v4"
 	"time"
 )
