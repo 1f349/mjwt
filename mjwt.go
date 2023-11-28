@@ -63,6 +63,9 @@ func (b *BaseTypeClaims[T]) init() *BaseTypeClaims[T] {
 
 // Valid checks the InternalClaimType matches and the type claim type
 func (b *BaseTypeClaims[T]) Valid() error {
+	if err := b.RegisteredClaims.Valid(); err != nil {
+		return err
+	}
 	if b.ClaimType != b.InternalClaimType() {
 		return ErrClaimTypeMismatch
 	}
