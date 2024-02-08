@@ -45,7 +45,7 @@ func (p *PermStorage) OneOf(o *PermStorage) bool {
 }
 
 func (p *PermStorage) Dump() []string {
-	var a []string
+	a := make([]string, 0, len(p.values))
 	for i := range p.values {
 		a = append(a, i)
 	}
