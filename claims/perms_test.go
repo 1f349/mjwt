@@ -3,6 +3,7 @@ package claims
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"sort"
 	"testing"
 )
 
@@ -57,6 +58,22 @@ func TestPermStorage_OneOf(t *testing.T) {
 	assert.True(t, ps.OneOf(o))
 	delete(ps.values, "mjwt:test2")
 	assert.False(t, ps.OneOf(o))
+}
+
+func TestPermStorage_Search(t *testing.T) {
+	ps := ParsePermStorage("mjwt:test mjwt:test2 mjwt:other")
+	a := ps.Search("mjwt:test*")
+	sort.Strings(a)
+	assert.Equal(t, []string{"mjwt:test", "mjwt:test2"}, a)
+	assert.Equal(t, []string{"mjwt:other"}, ps.Search("mjwt:other"))
+}
+
+func TestPermStorage_Filter(t *testing.T) {
+	ps := ParsePermStorage("mjwt:test mjwt:test2 mjwt:other mjwt:other2 mjwt:another")
+	a := ps.Filter([]string{"mjwt:test*", "mjwt:other*"}).Dump()
+	sort.Strings(a)
+	assert.Equal(t, []string{"mjwt:other", "mjwt:other2", "mjwt:test", "mjwt:test2"}, a)
+	assert.Equal(t, []string{"mjwt:another"}, ps.Filter([]string{"mjwt:another"}).Dump())
 }
 
 func TestPermStorage_MarshalJSON(t *testing.T) {
