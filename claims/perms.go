@@ -1,10 +1,12 @@
 package claims
 
 import (
+	"bufio"
 	"encoding/json"
 	"github.com/becheran/wildmatch-go"
 	"gopkg.in/yaml.v3"
 	"sort"
+	"strings"
 )
 
 type PermStorage struct {
@@ -13,6 +15,16 @@ type PermStorage struct {
 
 func NewPermStorage() *PermStorage {
 	return new(PermStorage).setup()
+}
+
+func ParsePermStorage(perms string) *PermStorage {
+	ps := NewPermStorage()
+	sc := bufio.NewScanner(strings.NewReader(perms))
+	sc.Split(bufio.ScanWords)
+	for sc.Scan() {
+		ps.Set(sc.Text())
+	}
+	return ps
 }
 
 func (p *PermStorage) setup() *PermStorage {

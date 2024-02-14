@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+func TestParsePermStorage(t *testing.T) {
+	t.Parallel()
+	ps := ParsePermStorage("mjwt:test mjwt:test2")
+	if _, ok := ps.values["mjwt:test"]; !ok {
+		assert.Fail(t, "perm not set")
+	}
+}
+
 func TestPermStorage_Set(t *testing.T) {
 	t.Parallel()
 	ps := NewPermStorage()
