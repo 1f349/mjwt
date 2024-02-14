@@ -76,6 +76,16 @@ func (p *PermStorage) Search(v string) []string {
 	return a
 }
 
+func (p *PermStorage) Filter(match []string) *PermStorage {
+	out := NewPermStorage()
+	for _, i := range match {
+		for _, j := range p.Search(i) {
+			out.Set(j)
+		}
+	}
+	return out
+}
+
 func (p *PermStorage) prepare(a []string) {
 	for _, i := range a {
 		p.Set(i)
