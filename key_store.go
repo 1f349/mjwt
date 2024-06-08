@@ -2,6 +2,7 @@ package mjwt
 
 import (
 	"crypto/rsa"
+	"errors"
 	"github.com/1f349/rsa-helper/rsaprivate"
 	"github.com/1f349/rsa-helper/rsapublic"
 	"os"
@@ -20,8 +21,8 @@ type defaultMJwtKeyStore struct {
 
 var _ KeyStore = &defaultMJwtKeyStore{}
 
-// NewMJwtKeyStore creates a new defaultMJwtKeyStore.
-func NewMJwtKeyStore() KeyStore {
+// newDefaultMJwtKeyStore creates a new defaultMJwtKeyStore.
+func newDefaultMJwtKeyStore() *defaultMJwtKeyStore {
 	return &defaultMJwtKeyStore{
 		rwLocker: new(sync.RWMutex),
 		store:    make(map[string]*rsa.PrivateKey),
@@ -29,11 +30,16 @@ func NewMJwtKeyStore() KeyStore {
 	}
 }
 
+// NewMJwtKeyStore creates a new defaultMJwtKeyStore.
+func NewMJwtKeyStore() KeyStore {
+	return newDefaultMJwtKeyStore()
+}
+
 // NewMJwtKeyStoreFromDirectory loads keys from a directory with the specified extensions to denote public and private
 // rsa keys; the kID is the filename of the key up to the first .
 func NewMJwtKeyStoreFromDirectory(directory string, keyPrvExt string, keyPubExt string) (KeyStore, error) {
 	// Create empty KeyStore
-	ks := NewMJwtKeyStore()
+	ks := newDefaultMJwtKeyStore()
 	// List directory contents
 	dirEntries, err := os.ReadDir(directory)
 	if err != nil {
@@ -46,22 +52,66 @@ func NewMJwtKeyStoreFromDirectory(directory string, keyPrvExt string, keyPubExt 
 			lastDotIdx := strings.LastIndex(entry.Name(), ".")
 			if firstDotIdx > 0 && lastDotIdx+1 < len(entry.Name()) {
 				if entry.Name()[lastDotIdx+1:] == keyPrvExt {
+					kID := entry.Name()[:firstDotIdx]
 					// Load rsa private key with the file name as the kID (Up to the first .)
-					key, err := rsaprivate.Read(path.Join(directory, entry.Name()))
-					if err == nil {
-						ks.SetKey(entry.Name()[:firstDotIdx], key)
+					key, err2 := rsaprivate.Read(path.Join(directory, entry.Name()))
+					if err2 == nil {
+						ks.store[kID] = key
+						ks.storePub[kID] = &key.PublicKey
+					} else {
+						err = err2
 					}
 				} else if entry.Name()[lastDotIdx+1:] == keyPubExt {
+					kID := entry.Name()[:firstDotIdx]
 					// Load rsa public key with the file name as the kID (Up to the first .)
-					key, err := rsapublic.Read(path.Join(directory, entry.Name()))
-					if err == nil {
-						ks.SetKeyPublic(entry.Name()[:firstDotIdx], key)
+					key, err2 := rsapublic.Read(path.Join(directory, entry.Name()))
+					if err2 == nil {
+						_, exs := ks.store[kID]
+						if !exs {
+							ks.store[kID] = nil
+						}
+						ks.storePub[kID] = key
+					} else {
+						err = err2
 					}
 				}
 			}
 		}
 	}
-	return ks, nil
+	return ks, err
+}
+
+// ExportKeyStore saves all the keys stored in the specified KeyStore into a directory with the specified
+// extensions for public and private keys
+func ExportKeyStore(ks KeyStore, directory string, keyPrvExt string, keyPubExt string) error {
+	if ks == nil {
+		return errors.New("ks is nil")
+	}
+
+	// Create directory
+	err := os.MkdirAll(directory, 0700)
+	if err != nil {
+		return err
+	}
+
+	// Export all keys
+	for _, kID := range ks.ListKeys() {
+		kPrv := ks.GetKey(kID)
+		if kPrv != nil {
+			err2 := rsaprivate.Write(path.Join(directory, kID+"."+keyPrvExt), kPrv)
+			if err2 != nil {
+				err = err2
+			}
+		}
+		kPub := ks.GetKeyPublic(kID)
+		if kPub != nil {
+			err2 := rsapublic.Write(path.Join(directory, kID+"."+keyPubExt), kPub)
+			if err2 != nil {
+				err = err2
+			}
+		}
+	}
+	return err
 }
 
 // SetKey adds a new rsa.PrivateKey with the specified kID to the KeyStore.
@@ -83,7 +133,10 @@ func (d *defaultMJwtKeyStore) SetKeyPublic(kID string, pubKey *rsa.PublicKey) bo
 	}
 	d.rwLocker.Lock()
 	defer d.rwLocker.Unlock()
-	delete(d.store, kID)
+	_, exs := d.store[kID]
+	if !exs {
+		d.store[kID] = nil
+	}
 	d.storePub[kID] = pubKey
 	return true
 }
@@ -111,6 +164,7 @@ func (d *defaultMJwtKeyStore) ListKeys() []string {
 	i := 0
 	for k := range d.store {
 		lKeys[i] = k
+		i++
 	}
 	return lKeys
 }
@@ -150,10 +204,6 @@ func (d *defaultMJwtKeyStore) ClearKeys() {
 	}
 	d.rwLocker.Lock()
 	defer d.rwLocker.Unlock()
-	for k := range d.store {
-		delete(d.store, k)
-	}
-	for k := range d.storePub {
-		delete(d.storePub, k)
-	}
+	clear(d.store)
+	clear(d.storePub)
 }
