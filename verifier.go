@@ -2,10 +2,8 @@ package mjwt
 
 import (
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
+	"github.com/1f349/rsa-helper/rsapublic"
 	"github.com/golang-jwt/jwt/v4"
-	"os"
 )
 
 // defaultMJwtVerifier implements Verifier and uses a rsa.PublicKey to validate
@@ -28,17 +26,8 @@ func newMJwtVerifier(key *rsa.PublicKey) *defaultMJwtVerifier {
 // NewMJwtVerifierFromFile creates a new defaultMJwtVerifier using the path of a
 // rsa.PublicKey file
 func NewMJwtVerifierFromFile(file string) (Verifier, error) {
-	// read file
-	f, err := os.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-
-	// decode pem block
-	block, _ := pem.Decode(f)
-
-	// parse public key from pem block
-	pub, err := x509.ParsePKCS1PublicKey(block.Bytes)
+	// read key
+	pub, err := rsapublic.Read(file)
 	if err != nil {
 		return nil, err
 	}

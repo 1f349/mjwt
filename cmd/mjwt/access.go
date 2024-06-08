@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"flag"
 	"fmt"
 	"github.com/1f349/mjwt"
 	"github.com/1f349/mjwt/auth"
 	"github.com/1f349/mjwt/claims"
+	"github.com/1f349/rsa-helper/rsaprivate"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/subcommands"
 	"os"
@@ -46,7 +44,7 @@ func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}
 	}
 
 	args := f.Args()
-	key, err := s.parseKey(args[0])
+	key, err := rsaprivate.Read(args[0])
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, "Error: Failed to parse private key: ", err)
 		return subcommands.ExitFailure
@@ -76,14 +74,4 @@ func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}
 
 	fmt.Println(token)
 	return subcommands.ExitSuccess
-}
-
-func (s *accessCmd) parseKey(privKeyFile string) (*rsa.PrivateKey, error) {
-	b, err := os.ReadFile(privKeyFile)
-	if err != nil {
-		return nil, err
-	}
-
-	p, _ := pem.Decode(b)
-	return x509.ParsePKCS1PrivateKey(p.Bytes)
 }

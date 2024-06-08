@@ -21,3 +21,14 @@ type Verifier interface {
 	VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, error)
 	PublicKey() *rsa.PublicKey
 }
+
+// KeyStore is used for the kid header support in Signer and Verifier.
+type KeyStore interface {
+	SetKey(kID string, prvKey *rsa.PrivateKey) bool
+	SetKeyPublic(kID string, pubKey *rsa.PublicKey) bool
+	RemoveKey(kID string) bool
+	ListKeys() []string
+	GetKey(kID string) *rsa.PrivateKey
+	GetKeyPublic(kID string) *rsa.PublicKey
+	ClearKeys()
+}

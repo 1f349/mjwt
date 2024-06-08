@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"flag"
 	"fmt"
+	"github.com/1f349/rsa-helper/rsaprivate"
+	"github.com/1f349/rsa-helper/rsapublic"
 	"github.com/google/subcommands"
 	"math/rand"
 	"os"
@@ -49,29 +49,14 @@ func (g *genCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) s
 }
 
 func (g *genCmd) gen(privPath, pubPath string) error {
-	createPriv, err := os.OpenFile(privPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return err
-	}
-	defer createPriv.Close()
-
-	createPub, err := os.OpenFile(pubPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return err
-	}
-	defer createPub.Close()
-
 	key, err := rsa.GenerateKey(rand.New(rand.NewSource(time.Now().UnixNano())), g.bits)
 	if err != nil {
 		return err
 	}
 
-	keyBytes := x509.MarshalPKCS1PrivateKey(key)
-	pubBytes := x509.MarshalPKCS1PublicKey(&key.PublicKey)
-	err = pem.Encode(createPriv, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: keyBytes})
+	err = rsaprivate.Write(privPath, key)
 	if err != nil {
 		return err
 	}
-	err = pem.Encode(createPub, &pem.Block{Type: "RSA PUBLIC KEY", Bytes: pubBytes})
-	return err
+	return rsapublic.Write(pubPath, &key.PublicKey)
 }

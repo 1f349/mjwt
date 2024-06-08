@@ -1,8 +1,11 @@
 module github.com/1f349/mjwt
 
-go 1.19
+go 1.22
+
+toolchain go1.22.3
 
 require (
+	github.com/1f349/rsa-helper v0.0.0-20240608023351-e4382c728b17
 	github.com/becheran/wildmatch-go v1.0.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/subcommands v1.2.0
