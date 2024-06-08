@@ -26,7 +26,7 @@ type Verifier interface {
 type KeyStore interface {
 	SetKey(kID string, prvKey *rsa.PrivateKey) bool
 	SetKeyPublic(kID string, pubKey *rsa.PublicKey) bool
-	RemoveKey(kID string) bool
+	RemoveKey(kID string)
 	ListKeys() []string
 	GetKey(kID string) *rsa.PrivateKey
 	GetKeyPublic(kID string) *rsa.PublicKey

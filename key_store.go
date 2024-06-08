@@ -21,8 +21,8 @@ type defaultMJwtKeyStore struct {
 
 var _ KeyStore = &defaultMJwtKeyStore{}
 
-// newDefaultMJwtKeyStore creates a new defaultMJwtKeyStore.
-func newDefaultMJwtKeyStore() *defaultMJwtKeyStore {
+// NewMJwtKeyStore creates a new defaultMJwtKeyStore.
+func NewMJwtKeyStore() KeyStore {
 	return &defaultMJwtKeyStore{
 		rwLocker: new(sync.RWMutex),
 		store:    make(map[string]*rsa.PrivateKey),
@@ -30,16 +30,11 @@ func newDefaultMJwtKeyStore() *defaultMJwtKeyStore {
 	}
 }
 
-// NewMJwtKeyStore creates a new defaultMJwtKeyStore.
-func NewMJwtKeyStore() KeyStore {
-	return newDefaultMJwtKeyStore()
-}
-
 // NewMJwtKeyStoreFromDirectory loads keys from a directory with the specified extensions to denote public and private
 // rsa keys; the kID is the filename of the key up to the first .
 func NewMJwtKeyStoreFromDirectory(directory string, keyPrvExt string, keyPubExt string) (KeyStore, error) {
 	// Create empty KeyStore
-	ks := newDefaultMJwtKeyStore()
+	ks := NewMJwtKeyStore().(*defaultMJwtKeyStore)
 	// List directory contents
 	dirEntries, err := os.ReadDir(directory)
 	if err != nil {
@@ -142,15 +137,15 @@ func (d *defaultMJwtKeyStore) SetKeyPublic(kID string, pubKey *rsa.PublicKey) bo
 }
 
 // RemoveKey removes a specified kID from the KeyStore.
-func (d *defaultMJwtKeyStore) RemoveKey(kID string) bool {
+func (d *defaultMJwtKeyStore) RemoveKey(kID string) {
 	if d == nil {
-		return false
+		return
 	}
 	d.rwLocker.Lock()
 	defer d.rwLocker.Unlock()
 	delete(d.store, kID)
 	delete(d.storePub, kID)
-	return true
+	return
 }
 
 // ListKeys lists the kIDs of all the keys in the KeyStore.
