@@ -42,34 +42,33 @@ func NewMJwtKeyStoreFromDirectory(directory, keyPrvExt, keyPubExt string) (KeySt
 	}
 	// Import keys from files, based on extension
 	for _, entry := range dirEntries {
-		if !entry.IsDir() {
-			firstDotIdx := strings.Index(entry.Name(), ".")
-			lastDotIdx := strings.LastIndex(entry.Name(), ".")
-			if firstDotIdx > 0 && lastDotIdx+1 < len(entry.Name()) {
-				if entry.Name()[lastDotIdx+1:] == keyPrvExt {
-					kID := entry.Name()[:firstDotIdx]
-					// Load rsa private key with the file name as the kID (Up to the first .)
-					key, err2 := rsaprivate.Read(path.Join(directory, entry.Name()))
-					if err2 == nil {
-						ks.store[kID] = key
-						ks.storePub[kID] = &key.PublicKey
-					} else {
-						err = err2
-					}
-				} else if entry.Name()[lastDotIdx+1:] == keyPubExt {
-					kID := entry.Name()[:firstDotIdx]
-					// Load rsa public key with the file name as the kID (Up to the first .)
-					key, err2 := rsapublic.Read(path.Join(directory, entry.Name()))
-					if err2 == nil {
-						_, exs := ks.store[kID]
-						if !exs {
-							ks.store[kID] = nil
-						}
-						ks.storePub[kID] = key
-					} else {
-						err = err2
-					}
+		if entry.IsDir() {
+			continue
+		}
+		kID, _, _ := strings.Cut(entry.Name(), ".")
+		if kID == "" {
+			continue
+		}
+		if path.Ext(entry.Name()) == "."+keyPrvExt {
+			// Load rsa private key with the file name as the kID (Up to the first .)
+			key, err2 := rsaprivate.Read(path.Join(directory, entry.Name()))
+			if err2 == nil {
+				ks.store[kID] = key
+				ks.storePub[kID] = &key.PublicKey
+			} else {
+				err = err2
+			}
+		} else if path.Ext(entry.Name()) == "."+keyPubExt {
+			// Load rsa public key with the file name as the kID (Up to the first .)
+			key, err2 := rsapublic.Read(path.Join(directory, entry.Name()))
+			if err2 == nil {
+				_, exs := ks.store[kID]
+				if !exs {
+					ks.store[kID] = nil
 				}
+				ks.storePub[kID] = key
+			} else {
+				err = err2
 			}
 		}
 	}
