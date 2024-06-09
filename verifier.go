@@ -7,6 +7,10 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+var ErrNoPublicKeyFound = errors.New("no public key found")
+var ErrKIDInvalid = errors.New("kid invalid")
+var ErrVerifierNil = errors.New("verifier nil")
+
 // defaultMJwtVerifier implements Verifier and uses a rsa.PublicKey to validate
 // MJWT tokens
 type defaultMJwtVerifier struct {
@@ -18,12 +22,12 @@ var _ Verifier = &defaultMJwtVerifier{}
 
 // NewMJwtVerifier creates a new defaultMJwtVerifier using the rsa.PublicKey
 func NewMJwtVerifier(key *rsa.PublicKey) Verifier {
-	return NewMjwtVerifierWithKeyStore(key, NewMJwtKeyStore())
+	return NewMJwtVerifierWithKeyStore(key, NewMJwtKeyStore())
 }
 
-// NewMjwtVerifierWithKeyStore creates a new defaultMJwtVerifier using a rsa.PublicKey as the non kID key
+// NewMJwtVerifierWithKeyStore creates a new defaultMJwtVerifier using a rsa.PublicKey as the non kID key
 // and a KeyStore for kID based keys
-func NewMjwtVerifierWithKeyStore(defaultKey *rsa.PublicKey, kStore KeyStore) Verifier {
+func NewMJwtVerifierWithKeyStore(defaultKey *rsa.PublicKey, kStore KeyStore) Verifier {
 	return &defaultMJwtVerifier{pub: defaultKey, kStore: kStore}
 }
 
@@ -62,13 +66,13 @@ func NewMJwtVerifierFromFileAndDirectory(file, directory, prvExt, pubExt string)
 		}
 	}
 
-	return NewMjwtVerifierWithKeyStore(pub, kStore), nil
+	return NewMJwtVerifierWithKeyStore(pub, kStore), nil
 }
 
 // VerifyJwt validates and parses MJWT tokens and returns the claims
 func (d *defaultMJwtVerifier) VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, error) {
 	if d == nil {
-		return nil, errors.New("verifier nil")
+		return nil, ErrVerifierNil
 	}
 	withClaims, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 		kIDI, exs := token.Header["kid"]
@@ -77,16 +81,16 @@ func (d *defaultMJwtVerifier) VerifyJwt(token string, claims baseTypeClaim) (*jw
 			if ok {
 				key := d.kStore.GetKeyPublic(kID)
 				if key == nil {
-					return nil, errors.New("no public key found")
+					return nil, ErrNoPublicKeyFound
 				} else {
 					return key, nil
 				}
 			} else {
-				return nil, errors.New("kid invalid")
+				return nil, ErrKIDInvalid
 			}
 		}
 		if d.pub == nil {
-			return nil, errors.New("no public key found")
+			return nil, ErrNoPublicKeyFound
 		}
 		return d.pub, nil
 	})

@@ -16,30 +16,27 @@ import (
 const st_prvExt = "prv"
 const st_pubExt = "pub"
 
-func setupTestDirSigner(t *testing.T, genKeys bool) (string, *rsa.PrivateKey, func(t *testing.T)) {
+func setupTestDirSigner(t *testing.T) (string, *rsa.PrivateKey, func(t *testing.T)) {
 	tempDir, err := os.MkdirTemp("", "this-is-a-test-dir")
 	assert.NoError(t, err)
 
 	var key3 *rsa.PrivateKey = nil
+	key1, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.NoError(t, err)
+	err = rsaprivate.Write(path.Join(tempDir, "key1.pem."+st_prvExt), key1)
+	assert.NoError(t, err)
 
-	if genKeys {
-		key1, err := rsa.GenerateKey(rand.Reader, 2048)
-		assert.NoError(t, err)
-		err = rsaprivate.Write(path.Join(tempDir, "key1.pem."+st_prvExt), key1)
-		assert.NoError(t, err)
+	key2, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.NoError(t, err)
+	err = rsaprivate.Write(path.Join(tempDir, "key2.pem."+st_prvExt), key2)
+	assert.NoError(t, err)
+	err = rsapublic.Write(path.Join(tempDir, "key2.pem."+st_pubExt), &key2.PublicKey)
+	assert.NoError(t, err)
 
-		key2, err := rsa.GenerateKey(rand.Reader, 2048)
-		assert.NoError(t, err)
-		err = rsaprivate.Write(path.Join(tempDir, "key2.pem."+st_prvExt), key2)
-		assert.NoError(t, err)
-		err = rsapublic.Write(path.Join(tempDir, "key2.pem."+st_pubExt), &key2.PublicKey)
-		assert.NoError(t, err)
-
-		key3, err = rsa.GenerateKey(rand.Reader, 2048)
-		assert.NoError(t, err)
-		err = rsapublic.Write(path.Join(tempDir, "key3.pem."+st_pubExt), &key3.PublicKey)
-		assert.NoError(t, err)
-	}
+	key3, err = rsa.GenerateKey(rand.Reader, 2048)
+	assert.NoError(t, err)
+	err = rsapublic.Write(path.Join(tempDir, "key3.pem."+st_pubExt), &key3.PublicKey)
+	assert.NoError(t, err)
 
 	return tempDir, key3, func(t *testing.T) {
 		err := os.RemoveAll(tempDir)
@@ -118,7 +115,7 @@ func TestReadOrCreatePrivateKey(t *testing.T) {
 func TestNewMJwtSignerFromDirectory(t *testing.T) {
 	t.Parallel()
 
-	tempDir, prvKey3, cleaner := setupTestDirSigner(t, true)
+	tempDir, prvKey3, cleaner := setupTestDirSigner(t)
 	defer cleaner(t)
 
 	signer, err := NewMJwtSignerFromDirectory("Test", tempDir, st_prvExt, st_pubExt)
@@ -135,7 +132,7 @@ func TestNewMJwtSignerFromDirectory(t *testing.T) {
 func TestNewMJwtSignerFromFileAndDirectory(t *testing.T) {
 	t.Parallel()
 
-	tempDir, prvKey3, cleaner := setupTestDirSigner(t, true)
+	tempDir, prvKey3, cleaner := setupTestDirSigner(t)
 	defer cleaner(t)
 
 	signer, err := NewMJwtSignerFromFileAndDirectory("Test", path.Join(tempDir, "key1.pem."+st_prvExt), tempDir, st_prvExt, st_pubExt)
