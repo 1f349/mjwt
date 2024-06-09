@@ -78,15 +78,14 @@ func (d *defaultMJwtVerifier) VerifyJwt(token string, claims baseTypeClaim) (*jw
 		kIDI, exs := token.Header["kid"]
 		if exs {
 			kID, ok := kIDI.(string)
-			if ok {
-				key := d.kStore.GetKeyPublic(kID)
-				if key == nil {
-					return nil, ErrNoPublicKeyFound
-				} else {
-					return key, nil
-				}
-			} else {
+			if !ok {
 				return nil, ErrKIDInvalid
+			}
+			key := d.kStore.GetKeyPublic(kID)
+			if key == nil {
+				return nil, ErrNoPublicKeyFound
+			} else {
+				return key, nil
 			}
 		}
 		if d.pub == nil {
