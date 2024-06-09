@@ -24,3 +24,23 @@ func TestCreateRefreshToken(t *testing.T) {
 	assert.Equal(t, "test", b.ID)
 	assert.Equal(t, "test2", b.Claims.AccessTokenId)
 }
+
+func TestCreateRefreshTokenWithKID(t *testing.T) {
+	t.Parallel()
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.NoError(t, err)
+
+	kStore := mjwt.NewMJwtKeyStore()
+	kStore.SetKey("test", key)
+
+	s := mjwt.NewMJwtSignerWithKeyStore("mjwt.test", nil, kStore)
+
+	refreshToken, err := CreateRefreshTokenWithKID(s, "1", "test", "test2", nil, "test")
+	assert.NoError(t, err)
+
+	_, b, err := mjwt.ExtractClaims[RefreshTokenClaims](s, refreshToken)
+	assert.NoError(t, err)
+	assert.Equal(t, "1", b.Subject)
+	assert.Equal(t, "test", b.ID)
+	assert.Equal(t, "test2", b.Claims.AccessTokenId)
+}
