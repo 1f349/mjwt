@@ -16,7 +16,7 @@ import (
 )
 
 type accessCmd struct {
-	issuer, subject, id, audience, duration string
+	issuer, subject, id, audience, duration, kID string
 }
 
 func (s *accessCmd) Name() string { return "access" }
@@ -24,7 +24,7 @@ func (s *accessCmd) Synopsis() string {
 	return "Generates an access token with permissions using the private key"
 }
 func (s *accessCmd) Usage() string {
-	return `sign [-iss <issuer>] [-sub <subject>] [-id <id>] [-aud <audience>] [-dur <duration>] <private key path> <space separated permissions>
+	return `sign [-iss <issuer>] [-sub <subject>] [-id <id>] [-aud <audience>] [-dur <duration>] [-kid <name>] <private key path> <space separated permissions>
   Output a signed MJWT token with the specified permissions.
 `
 }
@@ -35,6 +35,7 @@ func (s *accessCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&s.id, "id", "", "MJWT ID")
 	f.StringVar(&s.audience, "aud", "", "Comma separated audience items for the MJWT")
 	f.StringVar(&s.duration, "dur", "15m", "Duration for the MJWT (default: 15m)")
+	f.StringVar(&s.kID, "kid", "\x00", "The Key ID of the signing key")
 }
 
 func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -65,8 +66,17 @@ func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}
 		return subcommands.ExitFailure
 	}
 
-	signer := mjwt.NewMJwtSigner(s.issuer, key)
-	token, err := signer.GenerateJwt(s.subject, s.id, aud, dur, auth.AccessTokenClaims{Perms: ps})
+	var token string
+	if len(s.kID) == 1 && s.kID[0] == '\x00' {
+		signer := mjwt.NewMJwtSigner(s.issuer, key)
+		token, err = signer.GenerateJwt(s.subject, s.id, aud, dur, auth.AccessTokenClaims{Perms: ps})
+	} else {
+		kStore := mjwt.NewMJwtKeyStore()
+		kStore.SetKey(s.kID, key)
+		signer := mjwt.NewMJwtSignerWithKeyStore(s.issuer, nil, kStore)
+		token, err = signer.GenerateJwtWithKID(s.subject, s.id, aud, dur, auth.AccessTokenClaims{Perms: ps}, s.kID)
+	}
+
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, "Error: Failed to generate MJWT token: ", err)
 		return subcommands.ExitFailure

@@ -24,3 +24,13 @@ func CreateRefreshToken(p mjwt.Signer, sub, id, ati string, aud jwt.ClaimStrings
 func CreateRefreshTokenWithDuration(p mjwt.Signer, dur time.Duration, sub, id, ati string, aud jwt.ClaimStrings) (string, error) {
 	return p.GenerateJwt(sub, id, aud, dur, RefreshTokenClaims{AccessTokenId: ati})
 }
+
+// CreateRefreshTokenWithKID creates a refresh token with the default 7 day duration and the specified kID
+func CreateRefreshTokenWithKID(p mjwt.Signer, sub, id, ati string, aud jwt.ClaimStrings, kID string) (string, error) {
+	return CreateRefreshTokenWithDurationAndKID(p, time.Hour*24*7, sub, id, ati, aud, kID)
+}
+
+// CreateRefreshTokenWithDurationAndKID creates a refresh token with a custom duration and the specified kID
+func CreateRefreshTokenWithDurationAndKID(p mjwt.Signer, dur time.Duration, sub, id, ati string, aud jwt.ClaimStrings, kID string) (string, error) {
+	return p.GenerateJwtWithKID(sub, id, aud, dur, RefreshTokenClaims{AccessTokenId: ati}, kID)
+}

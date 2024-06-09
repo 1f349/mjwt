@@ -26,3 +26,23 @@ func CreateTokenPairWithDuration(p mjwt.Signer, accessDur, refreshDur time.Durat
 	}
 	return accessToken, refreshToken, nil
 }
+
+// CreateTokenPairWithKID creates an access and refresh token pair using the default
+// 15 minute and 7 day durations respectively using the specified kID
+func CreateTokenPairWithKID(p mjwt.Signer, sub, id, rId string, aud, rAud jwt.ClaimStrings, perms *claims.PermStorage, kID string) (string, string, error) {
+	return CreateTokenPairWithDurationAndKID(p, time.Minute*15, time.Hour*24*7, sub, id, rId, aud, rAud, perms, kID)
+}
+
+// CreateTokenPairWithDurationAndKID creates an access and refresh token pair using
+// custom durations for the access and refresh tokens
+func CreateTokenPairWithDurationAndKID(p mjwt.Signer, accessDur, refreshDur time.Duration, sub, id, rId string, aud, rAud jwt.ClaimStrings, perms *claims.PermStorage, kID string) (string, string, error) {
+	accessToken, err := CreateAccessTokenWithDurationAndKID(p, accessDur, sub, id, aud, perms, kID)
+	if err != nil {
+		return "", "", err
+	}
+	refreshToken, err := CreateRefreshTokenWithDurationAndKID(p, refreshDur, sub, rId, id, rAud, kID)
+	if err != nil {
+		return "", "", err
+	}
+	return accessToken, refreshToken, nil
+}
