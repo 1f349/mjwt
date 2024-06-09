@@ -67,7 +67,7 @@ func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}
 	}
 
 	var token string
-	if len(s.kID) == 1 && s.kID[0] == '\x00' {
+	if s.kID == "\x00" {
 		signer := mjwt.NewMJwtSigner(s.issuer, key)
 		token, err = signer.GenerateJwt(s.subject, s.id, aud, dur, auth.AccessTokenClaims{Perms: ps})
 	} else {
