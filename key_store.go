@@ -40,6 +40,7 @@ func NewMJwtKeyStoreFromDirectory(directory, keyPrvExt, keyPubExt string) (KeySt
 	if err != nil {
 		return nil, err
 	}
+	errs := make([]error, 0, len(dirEntries)/2)
 	// Import keys from files, based on extension
 	for _, entry := range dirEntries {
 		if entry.IsDir() {
@@ -55,9 +56,8 @@ func NewMJwtKeyStoreFromDirectory(directory, keyPrvExt, keyPubExt string) (KeySt
 			if err2 == nil {
 				ks.store[kID] = key
 				ks.storePub[kID] = &key.PublicKey
-			} else {
-				err = err2
 			}
+			errs = append(errs, err2)
 		} else if path.Ext(entry.Name()) == "."+keyPubExt {
 			// Load rsa public key with the file name as the kID (Up to the first .)
 			key, err2 := rsapublic.Read(path.Join(directory, entry.Name()))
@@ -67,11 +67,11 @@ func NewMJwtKeyStoreFromDirectory(directory, keyPrvExt, keyPubExt string) (KeySt
 					ks.store[kID] = nil
 				}
 				ks.storePub[kID] = key
-			} else {
-				err = err2
 			}
+			errs = append(errs, err2)
 		}
 	}
+	err = errors.Join(errs...)
 	return ks, err
 }
 
@@ -88,23 +88,21 @@ func ExportKeyStore(ks KeyStore, directory, keyPrvExt, keyPubExt string) error {
 		return err
 	}
 
+	errs := make([]error, 0, len(ks.ListKeys())/2)
 	// Export all keys
 	for _, kID := range ks.ListKeys() {
 		kPrv := ks.GetKey(kID)
 		if kPrv != nil {
 			err2 := rsaprivate.Write(path.Join(directory, kID+"."+keyPrvExt), kPrv)
-			if err2 != nil {
-				err = err2
-			}
+			errs = append(errs, err2)
 		}
 		kPub := ks.GetKeyPublic(kID)
 		if kPub != nil {
 			err2 := rsapublic.Write(path.Join(directory, kID+"."+keyPubExt), kPub)
-			if err2 != nil {
-				err = err2
-			}
+			errs = append(errs, err2)
 		}
 	}
+	err = errors.Join(errs...)
 	return err
 }
 
