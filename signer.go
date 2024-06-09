@@ -30,10 +30,14 @@ func NewMJwtSigner(issuer string, key *rsa.PrivateKey) Signer {
 // NewMJwtSignerWithKeyStore creates a new defaultMJwtSigner using the issuer name, a rsa.PrivateKey
 // for no kID and a KeyStore for kID based keys
 func NewMJwtSignerWithKeyStore(issuer string, key *rsa.PrivateKey, kStore KeyStore) Signer {
+	var pKey *rsa.PublicKey = nil
+	if key != nil {
+		pKey = &key.PublicKey
+	}
 	return &defaultMJwtSigner{
 		issuer: issuer,
 		key:    key,
-		verify: NewMjwtVerifierWithKeyStore(&key.PublicKey, kStore).(*defaultMJwtVerifier),
+		verify: NewMjwtVerifierWithKeyStore(pKey, kStore).(*defaultMJwtVerifier),
 	}
 }
 
@@ -107,6 +111,9 @@ func (d *defaultMJwtSigner) GenerateJwt(sub, id string, aud jwt.ClaimStrings, du
 func (d *defaultMJwtSigner) SignJwt(wrapped jwt.Claims) (string, error) {
 	if d == nil {
 		return "", errors.New("signer nil")
+	}
+	if d.key == nil {
+		return "", errors.New("no private key found")
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, wrapped)
 	return token.SignedString(d.key)

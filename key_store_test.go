@@ -11,8 +11,8 @@ import (
 	"testing"
 )
 
-const prvExt = "prv"
-const pubExt = "pub"
+const kst_prvExt = "prv"
+const kst_pubExt = "pub"
 
 func setupTestDirKeyStore(t *testing.T, genKeys bool) (string, func(t *testing.T)) {
 	tempDir, err := os.MkdirTemp("", "this-is-a-test-dir")
@@ -21,19 +21,19 @@ func setupTestDirKeyStore(t *testing.T, genKeys bool) (string, func(t *testing.T
 	if genKeys {
 		key1, err := rsa.GenerateKey(rand.Reader, 2048)
 		assert.NoError(t, err)
-		err = rsaprivate.Write(path.Join(tempDir, "key1.pem."+prvExt), key1)
+		err = rsaprivate.Write(path.Join(tempDir, "key1.pem."+kst_prvExt), key1)
 		assert.NoError(t, err)
 
 		key2, err := rsa.GenerateKey(rand.Reader, 2048)
 		assert.NoError(t, err)
-		err = rsaprivate.Write(path.Join(tempDir, "key2.pem."+prvExt), key2)
+		err = rsaprivate.Write(path.Join(tempDir, "key2.pem."+kst_prvExt), key2)
 		assert.NoError(t, err)
-		err = rsapublic.Write(path.Join(tempDir, "key2.pem."+pubExt), &key2.PublicKey)
+		err = rsapublic.Write(path.Join(tempDir, "key2.pem."+kst_pubExt), &key2.PublicKey)
 		assert.NoError(t, err)
 
 		key3, err := rsa.GenerateKey(rand.Reader, 2048)
 		assert.NoError(t, err)
-		err = rsapublic.Write(path.Join(tempDir, "key3.pem."+pubExt), &key3.PublicKey)
+		err = rsapublic.Write(path.Join(tempDir, "key3.pem."+kst_pubExt), &key3.PublicKey)
 		assert.NoError(t, err)
 	}
 
@@ -110,7 +110,7 @@ func TestNewMJwtKeyStoreFromDirectory(t *testing.T) {
 	tempDir, cleaner := setupTestDirKeyStore(t, true)
 	defer cleaner(t)
 
-	kStore, err := NewMJwtKeyStoreFromDirectory(tempDir, prvExt, pubExt)
+	kStore, err := NewMJwtKeyStoreFromDirectory(tempDir, kst_prvExt, kst_pubExt)
 	assert.NoError(t, err)
 
 	assert.Len(t, kStore.ListKeys(), 3)
@@ -130,7 +130,7 @@ func TestExportKeyStore(t *testing.T) {
 	tempDir2, cleaner2 := setupTestDirKeyStore(t, false)
 	defer cleaner2(t)
 
-	kStore, err := NewMJwtKeyStoreFromDirectory(tempDir, prvExt, pubExt)
+	kStore, err := NewMJwtKeyStoreFromDirectory(tempDir, kst_prvExt, kst_pubExt)
 	assert.NoError(t, err)
 
 	const prvExt2 = "v"
