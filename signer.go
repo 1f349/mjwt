@@ -3,6 +3,7 @@ package mjwt
 import (
 	"bytes"
 	"crypto/rsa"
+	"errors"
 	"github.com/1f349/rsa-helper/rsaprivate"
 	"github.com/golang-jwt/jwt/v4"
 	"io"
@@ -23,10 +24,16 @@ var _ Verifier = &defaultMJwtSigner{}
 
 // NewMJwtSigner creates a new defaultMJwtSigner using the issuer name and rsa.PrivateKey
 func NewMJwtSigner(issuer string, key *rsa.PrivateKey) Signer {
+	return NewMJwtSignerWithKeyStore(issuer, key, NewMJwtKeyStore())
+}
+
+// NewMJwtSignerWithKeyStore creates a new defaultMJwtSigner using the issuer name, a rsa.PrivateKey
+// for no kID and a KeyStore for kID based keys
+func NewMJwtSignerWithKeyStore(issuer string, key *rsa.PrivateKey, kStore KeyStore) Signer {
 	return &defaultMJwtSigner{
 		issuer: issuer,
 		key:    key,
-		verify: newMJwtVerifier(&key.PublicKey),
+		verify: NewMjwtVerifierWithKeyStore(&key.PublicKey, kStore).(*defaultMJwtVerifier),
 	}
 }
 
@@ -44,38 +51,131 @@ func NewMJwtSignerFromFileOrCreate(issuer, file string, random io.Reader, bits i
 // NewMJwtSignerFromFile creates a new defaultMJwtSigner using the path of a
 // rsa.PrivateKey file.
 func NewMJwtSignerFromFile(issuer, file string) (Signer, error) {
+	return NewMJwtSignerFromFileAndDirectory(issuer, file, "", "", "")
+}
+
+// NewMJwtSignerFromDirectory creates a new defaultMJwtSigner using the path of a directory to
+// load the keys into a KeyStore; there is no default rsa.PrivateKey
+func NewMJwtSignerFromDirectory(issuer, directory, prvExt, pubExt string) (Signer, error) {
+	return NewMJwtSignerFromFileAndDirectory(issuer, "", directory, prvExt, pubExt)
+}
+
+// NewMJwtSignerFromFileAndDirectory creates a new defaultMJwtSigner using the path of a rsa.PrivateKey
+// file as the non kID key and the path of a directory to load the keys into a KeyStore
+func NewMJwtSignerFromFileAndDirectory(issuer, file, directory, prvExt, pubExt string) (Signer, error) {
+	var err error
+
 	// read key
-	key, err := rsaprivate.Read(file)
-	if err != nil {
-		return nil, err
+	var prv *rsa.PrivateKey = nil
+	if file != "" {
+		prv, err = rsaprivate.Read(file)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// create signer using rsa.PrivateKey
-	return NewMJwtSigner(issuer, key), nil
+	// read KeyStore
+	var kStore KeyStore = nil
+	if directory != "" {
+		kStore, err = NewMJwtKeyStoreFromDirectory(directory, prvExt, pubExt)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return NewMJwtSignerWithKeyStore(issuer, prv, kStore), nil
 }
 
 // Issuer returns the name of the issuer
-func (d *defaultMJwtSigner) Issuer() string { return d.issuer }
+func (d *defaultMJwtSigner) Issuer() string {
+	if d == nil {
+		return ""
+	}
+	return d.issuer
+}
 
-// GenerateJwt generates and returns a JWT string using the sub, id, duration and claims
+// GenerateJwt generates and returns a JWT string using the sub, id, duration and claims; uses the default key
 func (d *defaultMJwtSigner) GenerateJwt(sub, id string, aud jwt.ClaimStrings, dur time.Duration, claims Claims) (string, error) {
+	if d == nil {
+		return "", errors.New("signer nil")
+	}
 	return d.SignJwt(wrapClaims[Claims](d, sub, id, aud, dur, claims))
 }
 
 // SignJwt signs a jwt.Claims compatible struct, this is used internally by
-// GenerateJwt but is available for signing custom structs
+// GenerateJwt but is available for signing custom structs; uses the default key
 func (d *defaultMJwtSigner) SignJwt(wrapped jwt.Claims) (string, error) {
+	if d == nil {
+		return "", errors.New("signer nil")
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, wrapped)
 	return token.SignedString(d.key)
 }
 
+// GenerateJwtWithKID generates and returns a JWT string using the sub, id, duration and claims; this gets signed with the specified kID
+func (d *defaultMJwtSigner) GenerateJwtWithKID(sub, id string, aud jwt.ClaimStrings, dur time.Duration, claims Claims, kID string) (string, error) {
+	if d == nil {
+		return "", errors.New("signer nil")
+	}
+	return d.SignJwtWithKID(wrapClaims[Claims](d, sub, id, aud, dur, claims), kID)
+}
+
+// SignJwtWithKID signs a jwt.Claims compatible struct, this is used internally by
+// GenerateJwt but is available for signing custom structs; this gets signed with the specified kID
+func (d *defaultMJwtSigner) SignJwtWithKID(wrapped jwt.Claims, kID string) (string, error) {
+	if d == nil {
+		return "", errors.New("signer nil")
+	}
+	pKey := d.verify.GetKeyStore().GetKey(kID)
+	if pKey == nil {
+		return "", errors.New("no private key found")
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodRS512, wrapped)
+	token.Header["kid"] = kID
+	return token.SignedString(pKey)
+}
+
 // VerifyJwt validates and parses MJWT tokens see defaultMJwtVerifier.VerifyJwt()
 func (d *defaultMJwtSigner) VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, error) {
+	if d == nil {
+		return nil, errors.New("signer nil")
+	}
 	return d.verify.VerifyJwt(token, claims)
 }
 
-func (d *defaultMJwtSigner) PrivateKey() *rsa.PrivateKey { return d.key }
-func (d *defaultMJwtSigner) PublicKey() *rsa.PublicKey   { return d.verify.pub }
+func (d *defaultMJwtSigner) PrivateKey() *rsa.PrivateKey {
+	if d == nil {
+		return nil
+	}
+	return d.key
+}
+func (d *defaultMJwtSigner) PublicKey() *rsa.PublicKey {
+	if d == nil {
+		return nil
+	}
+	return d.verify.pub
+}
+
+func (d *defaultMJwtSigner) PublicKeyOf(kID string) *rsa.PublicKey {
+	if d == nil {
+		return nil
+	}
+	return d.verify.kStore.GetKeyPublic(kID)
+}
+
+func (d *defaultMJwtSigner) GetKeyStore() KeyStore {
+	if d == nil {
+		return nil
+	}
+	return d.verify.GetKeyStore()
+}
+
+func (d *defaultMJwtSigner) PrivateKeyOf(kID string) *rsa.PrivateKey {
+	if d == nil {
+		return nil
+	}
+	return d.verify.kStore.GetKey(kID)
+}
 
 // readOrCreatePrivateKey returns the private key it the file already exists,
 // generates a new private key and saves it to the file, or returns an error if

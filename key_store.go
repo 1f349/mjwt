@@ -32,7 +32,7 @@ func NewMJwtKeyStore() KeyStore {
 
 // NewMJwtKeyStoreFromDirectory loads keys from a directory with the specified extensions to denote public and private
 // rsa keys; the kID is the filename of the key up to the first .
-func NewMJwtKeyStoreFromDirectory(directory string, keyPrvExt string, keyPubExt string) (KeyStore, error) {
+func NewMJwtKeyStoreFromDirectory(directory, keyPrvExt, keyPubExt string) (KeyStore, error) {
 	// Create empty KeyStore
 	ks := NewMJwtKeyStore().(*defaultMJwtKeyStore)
 	// List directory contents
@@ -78,7 +78,7 @@ func NewMJwtKeyStoreFromDirectory(directory string, keyPrvExt string, keyPubExt 
 
 // ExportKeyStore saves all the keys stored in the specified KeyStore into a directory with the specified
 // extensions for public and private keys
-func ExportKeyStore(ks KeyStore, directory string, keyPrvExt string, keyPubExt string) error {
+func ExportKeyStore(ks KeyStore, directory, keyPrvExt, keyPubExt string) error {
 	if ks == nil {
 		return errors.New("ks is nil")
 	}
@@ -110,21 +110,21 @@ func ExportKeyStore(ks KeyStore, directory string, keyPrvExt string, keyPubExt s
 }
 
 // SetKey adds a new rsa.PrivateKey with the specified kID to the KeyStore.
-func (d *defaultMJwtKeyStore) SetKey(kID string, prvKey *rsa.PrivateKey) bool {
+func (d *defaultMJwtKeyStore) SetKey(kID string, prvKey *rsa.PrivateKey) {
 	if d == nil || prvKey == nil {
-		return false
+		return
 	}
 	d.rwLocker.Lock()
 	defer d.rwLocker.Unlock()
 	d.store[kID] = prvKey
 	d.storePub[kID] = &prvKey.PublicKey
-	return true
+	return
 }
 
 // SetKeyPublic adds a new rsa.PublicKey with the specified kID to the KeyStore.
-func (d *defaultMJwtKeyStore) SetKeyPublic(kID string, pubKey *rsa.PublicKey) bool {
+func (d *defaultMJwtKeyStore) SetKeyPublic(kID string, pubKey *rsa.PublicKey) {
 	if d == nil || pubKey == nil {
-		return false
+		return
 	}
 	d.rwLocker.Lock()
 	defer d.rwLocker.Unlock()
@@ -133,7 +133,7 @@ func (d *defaultMJwtKeyStore) SetKeyPublic(kID string, pubKey *rsa.PublicKey) bo
 		d.store[kID] = nil
 	}
 	d.storePub[kID] = pubKey
-	return true
+	return
 }
 
 // RemoveKey removes a specified kID from the KeyStore.

@@ -14,7 +14,7 @@ import (
 const prvExt = "prv"
 const pubExt = "pub"
 
-func setupTestDir(t *testing.T, genKeys bool) (string, func(t *testing.T)) {
+func setupTestDirKeyStore(t *testing.T, genKeys bool) (string, func(t *testing.T)) {
 	tempDir, err := os.MkdirTemp("", "this-is-a-test-dir")
 	assert.NoError(t, err)
 
@@ -43,7 +43,7 @@ func setupTestDir(t *testing.T, genKeys bool) (string, func(t *testing.T)) {
 	}
 }
 
-func commonSubTests(t *testing.T, kStore KeyStore) {
+func commonSubTestsKeyStore(t *testing.T, kStore KeyStore) {
 	key4, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
 
@@ -54,14 +54,12 @@ func commonSubTests(t *testing.T, kStore KeyStore) {
 	const extraKID2 = "key5"
 
 	t.Run("TestSetKey", func(t *testing.T) {
-		b := kStore.SetKey(extraKID1, key4)
-		assert.True(t, b)
+		kStore.SetKey(extraKID1, key4)
 		assert.Contains(t, kStore.ListKeys(), extraKID1)
 	})
 
 	t.Run("TestSetKeyPublic", func(t *testing.T) {
-		b := kStore.SetKeyPublic(extraKID2, &key5.PublicKey)
-		assert.True(t, b)
+		kStore.SetKeyPublic(extraKID2, &key5.PublicKey)
 		assert.Contains(t, kStore.ListKeys(), extraKID2)
 	})
 
@@ -109,7 +107,7 @@ func commonSubTests(t *testing.T, kStore KeyStore) {
 func TestNewMJwtKeyStoreFromDirectory(t *testing.T) {
 	t.Parallel()
 
-	tempDir, cleaner := setupTestDir(t, true)
+	tempDir, cleaner := setupTestDirKeyStore(t, true)
 	defer cleaner(t)
 
 	kStore, err := NewMJwtKeyStoreFromDirectory(tempDir, prvExt, pubExt)
@@ -121,15 +119,15 @@ func TestNewMJwtKeyStoreFromDirectory(t *testing.T) {
 		assert.Contains(t, kStore.ListKeys(), k)
 	}
 
-	commonSubTests(t, kStore)
+	commonSubTestsKeyStore(t, kStore)
 }
 
 func TestExportKeyStore(t *testing.T) {
 	t.Parallel()
 
-	tempDir, cleaner := setupTestDir(t, true)
+	tempDir, cleaner := setupTestDirKeyStore(t, true)
 	defer cleaner(t)
-	tempDir2, cleaner2 := setupTestDir(t, false)
+	tempDir2, cleaner2 := setupTestDirKeyStore(t, false)
 	defer cleaner2(t)
 
 	kStore, err := NewMJwtKeyStoreFromDirectory(tempDir, prvExt, pubExt)
@@ -150,5 +148,5 @@ func TestExportKeyStore(t *testing.T) {
 		assert.Contains(t, kStore2.ListKeys(), k)
 	}
 
-	commonSubTests(t, kStore2)
+	commonSubTestsKeyStore(t, kStore2)
 }
