@@ -9,7 +9,6 @@ import (
 
 var ErrNoPublicKeyFound = errors.New("no public key found")
 var ErrKIDInvalid = errors.New("kid invalid")
-var ErrVerifierNil = errors.New("verifier nil")
 
 // defaultMJwtVerifier implements Verifier and uses a rsa.PublicKey to validate
 // MJWT tokens
@@ -71,9 +70,6 @@ func NewMJwtVerifierFromFileAndDirectory(file, directory, prvExt, pubExt string)
 
 // VerifyJwt validates and parses MJWT tokens and returns the claims
 func (d *defaultMJwtVerifier) VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, error) {
-	if d == nil {
-		return nil, ErrVerifierNil
-	}
 	withClaims, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 		kIDI, exs := token.Header["kid"]
 		if exs {
@@ -100,22 +96,13 @@ func (d *defaultMJwtVerifier) VerifyJwt(token string, claims baseTypeClaim) (*jw
 }
 
 func (d *defaultMJwtVerifier) PublicKey() *rsa.PublicKey {
-	if d == nil {
-		return nil
-	}
 	return d.pub
 }
 
 func (d *defaultMJwtVerifier) PublicKeyOf(kID string) *rsa.PublicKey {
-	if d == nil {
-		return nil
-	}
 	return d.kStore.GetKeyPublic(kID)
 }
 
 func (d *defaultMJwtVerifier) GetKeyStore() KeyStore {
-	if d == nil {
-		return nil
-	}
 	return d.kStore
 }

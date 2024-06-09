@@ -12,7 +12,6 @@ import (
 )
 
 var ErrNoPrivateKeyFound = errors.New("no private key found")
-var ErrSignerNil = errors.New("signer nil")
 
 // defaultMJwtSigner implements Signer and uses an rsa.PrivateKey and issuer name
 // to generate MJWT tokens
@@ -95,26 +94,17 @@ func NewMJwtSignerFromFileAndDirectory(issuer, file, directory, prvExt, pubExt s
 
 // Issuer returns the name of the issuer
 func (d *defaultMJwtSigner) Issuer() string {
-	if d == nil {
-		return ""
-	}
 	return d.issuer
 }
 
 // GenerateJwt generates and returns a JWT string using the sub, id, duration and claims; uses the default key
 func (d *defaultMJwtSigner) GenerateJwt(sub, id string, aud jwt.ClaimStrings, dur time.Duration, claims Claims) (string, error) {
-	if d == nil {
-		return "", ErrSignerNil
-	}
 	return d.SignJwt(wrapClaims[Claims](d, sub, id, aud, dur, claims))
 }
 
 // SignJwt signs a jwt.Claims compatible struct, this is used internally by
 // GenerateJwt but is available for signing custom structs; uses the default key
 func (d *defaultMJwtSigner) SignJwt(wrapped jwt.Claims) (string, error) {
-	if d == nil {
-		return "", ErrSignerNil
-	}
 	if d.key == nil {
 		return "", ErrNoPrivateKeyFound
 	}
@@ -124,18 +114,12 @@ func (d *defaultMJwtSigner) SignJwt(wrapped jwt.Claims) (string, error) {
 
 // GenerateJwtWithKID generates and returns a JWT string using the sub, id, duration and claims; this gets signed with the specified kID
 func (d *defaultMJwtSigner) GenerateJwtWithKID(sub, id string, aud jwt.ClaimStrings, dur time.Duration, claims Claims, kID string) (string, error) {
-	if d == nil {
-		return "", ErrSignerNil
-	}
 	return d.SignJwtWithKID(wrapClaims[Claims](d, sub, id, aud, dur, claims), kID)
 }
 
 // SignJwtWithKID signs a jwt.Claims compatible struct, this is used internally by
 // GenerateJwt but is available for signing custom structs; this gets signed with the specified kID
 func (d *defaultMJwtSigner) SignJwtWithKID(wrapped jwt.Claims, kID string) (string, error) {
-	if d == nil {
-		return "", ErrSignerNil
-	}
 	pKey := d.verify.GetKeyStore().GetKey(kID)
 	if pKey == nil {
 		return "", ErrNoPrivateKeyFound
@@ -147,43 +131,25 @@ func (d *defaultMJwtSigner) SignJwtWithKID(wrapped jwt.Claims, kID string) (stri
 
 // VerifyJwt validates and parses MJWT tokens see defaultMJwtVerifier.VerifyJwt()
 func (d *defaultMJwtSigner) VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, error) {
-	if d == nil {
-		return nil, ErrSignerNil
-	}
 	return d.verify.VerifyJwt(token, claims)
 }
 
 func (d *defaultMJwtSigner) PrivateKey() *rsa.PrivateKey {
-	if d == nil {
-		return nil
-	}
 	return d.key
 }
 func (d *defaultMJwtSigner) PublicKey() *rsa.PublicKey {
-	if d == nil {
-		return nil
-	}
 	return d.verify.pub
 }
 
 func (d *defaultMJwtSigner) PublicKeyOf(kID string) *rsa.PublicKey {
-	if d == nil {
-		return nil
-	}
 	return d.verify.kStore.GetKeyPublic(kID)
 }
 
 func (d *defaultMJwtSigner) GetKeyStore() KeyStore {
-	if d == nil {
-		return nil
-	}
 	return d.verify.GetKeyStore()
 }
 
 func (d *defaultMJwtSigner) PrivateKeyOf(kID string) *rsa.PrivateKey {
-	if d == nil {
-		return nil
-	}
 	return d.verify.kStore.GetKey(kID)
 }
 

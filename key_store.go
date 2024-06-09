@@ -107,7 +107,7 @@ func ExportKeyStore(ks KeyStore, directory, keyPrvExt, keyPubExt string) error {
 
 // SetKey adds a new rsa.PrivateKey with the specified kID to the KeyStore.
 func (d *defaultMJwtKeyStore) SetKey(kID string, prvKey *rsa.PrivateKey) {
-	if d == nil || prvKey == nil {
+	if prvKey == nil {
 		return
 	}
 	d.rwLocker.Lock()
@@ -119,7 +119,7 @@ func (d *defaultMJwtKeyStore) SetKey(kID string, prvKey *rsa.PrivateKey) {
 
 // SetKeyPublic adds a new rsa.PublicKey with the specified kID to the KeyStore.
 func (d *defaultMJwtKeyStore) SetKeyPublic(kID string, pubKey *rsa.PublicKey) {
-	if d == nil || pubKey == nil {
+	if pubKey == nil {
 		return
 	}
 	d.rwLocker.Lock()
@@ -134,9 +134,6 @@ func (d *defaultMJwtKeyStore) SetKeyPublic(kID string, pubKey *rsa.PublicKey) {
 
 // RemoveKey removes a specified kID from the KeyStore.
 func (d *defaultMJwtKeyStore) RemoveKey(kID string) {
-	if d == nil {
-		return
-	}
 	d.rwLocker.Lock()
 	defer d.rwLocker.Unlock()
 	delete(d.store, kID)
@@ -146,9 +143,6 @@ func (d *defaultMJwtKeyStore) RemoveKey(kID string) {
 
 // ListKeys lists the kIDs of all the keys in the KeyStore.
 func (d *defaultMJwtKeyStore) ListKeys() []string {
-	if d == nil {
-		return nil
-	}
 	d.rwLocker.RLock()
 	defer d.rwLocker.RUnlock()
 	lKeys := make([]string, len(d.store))
@@ -162,9 +156,6 @@ func (d *defaultMJwtKeyStore) ListKeys() []string {
 
 // GetKey gets the rsa.PrivateKey given the kID in the KeyStore or null if not found.
 func (d *defaultMJwtKeyStore) GetKey(kID string) *rsa.PrivateKey {
-	if d == nil {
-		return nil
-	}
 	d.rwLocker.RLock()
 	defer d.rwLocker.RUnlock()
 	kPrv, ok := d.store[kID]
@@ -176,9 +167,6 @@ func (d *defaultMJwtKeyStore) GetKey(kID string) *rsa.PrivateKey {
 
 // GetKeyPublic gets the rsa.PublicKey given the kID in the KeyStore or null if not found.
 func (d *defaultMJwtKeyStore) GetKeyPublic(kID string) *rsa.PublicKey {
-	if d == nil {
-		return nil
-	}
 	d.rwLocker.RLock()
 	defer d.rwLocker.RUnlock()
 	kPub, ok := d.storePub[kID]
@@ -190,9 +178,6 @@ func (d *defaultMJwtKeyStore) GetKeyPublic(kID string) *rsa.PublicKey {
 
 // ClearKeys removes all the stored keys in the KeyStore.
 func (d *defaultMJwtKeyStore) ClearKeys() {
-	if d == nil {
-		return
-	}
 	d.rwLocker.Lock()
 	defer d.rwLocker.Unlock()
 	clear(d.store)
