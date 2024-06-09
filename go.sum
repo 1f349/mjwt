@@ -1,5 +1,4 @@
-github.com/1f349/rsa-helper v0.0.0-20240608023351-e4382c728b17 h1:cgJDS14TTM8hvg1qNhXFj3IfFEZ99IXR00D8gcwbY98=
-github.com/1f349/rsa-helper v0.0.0-20240608023351-e4382c728b17/go.mod h1:VUQ++1tYYhYrXeOmVFkQ82BegR24HQEJHl5lHbjg7yg=
+github.com/1f349/rsa-helper v0.0.1 h1:Ec/MXHR2eIpLgIR69eqhCV2o8OOBs2JZNAkEhW7HQks=
 github.com/1f349/rsa-helper v0.0.1/go.mod h1:VUQ++1tYYhYrXeOmVFkQ82BegR24HQEJHl5lHbjg7yg=
 github.com/becheran/wildmatch-go v1.0.0 h1:mE3dGGkTmpKtT4Z+88t8RStG40yN9T+kFEGj2PZFSzA=
 github.com/becheran/wildmatch-go v1.0.0/go.mod h1:gbMvj0NtVdJ15Mg/mH9uxk2R1QCistMyU7d9KFzroX4=

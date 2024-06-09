@@ -50,7 +50,8 @@ func NewMJwtKeyStoreFromDirectory(directory, keyPrvExt, keyPubExt string) (KeySt
 		if kID == "" {
 			continue
 		}
-		if path.Ext(entry.Name()) == "."+keyPrvExt {
+		pExt := path.Ext(entry.Name())
+		if pExt == "."+keyPrvExt {
 			// Load rsa private key with the file name as the kID (Up to the first .)
 			key, err2 := rsaprivate.Read(path.Join(directory, entry.Name()))
 			if err2 == nil {
@@ -58,7 +59,7 @@ func NewMJwtKeyStoreFromDirectory(directory, keyPrvExt, keyPubExt string) (KeySt
 				ks.storePub[kID] = &key.PublicKey
 			}
 			errs = append(errs, err2)
-		} else if path.Ext(entry.Name()) == "."+keyPubExt {
+		} else if pExt == "."+keyPubExt {
 			// Load rsa public key with the file name as the kID (Up to the first .)
 			key, err2 := rsapublic.Read(path.Join(directory, entry.Name()))
 			if err2 == nil {
@@ -71,8 +72,7 @@ func NewMJwtKeyStoreFromDirectory(directory, keyPrvExt, keyPubExt string) (KeySt
 			errs = append(errs, err2)
 		}
 	}
-	err = errors.Join(errs...)
-	return ks, err
+	return ks, errors.Join(errs...)
 }
 
 // ExportKeyStore saves all the keys stored in the specified KeyStore into a directory with the specified
@@ -102,8 +102,7 @@ func ExportKeyStore(ks KeyStore, directory, keyPrvExt, keyPubExt string) error {
 			errs = append(errs, err2)
 		}
 	}
-	err = errors.Join(errs...)
-	return err
+	return errors.Join(errs...)
 }
 
 // SetKey adds a new rsa.PrivateKey with the specified kID to the KeyStore.
