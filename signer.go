@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const readLimit = 10240 // 10 KiB
+
 var ErrNoPrivateKeyFound = errors.New("no private key found")
 
 // defaultMJwtSigner implements Signer and uses an rsa.PrivateKey and issuer name
@@ -181,15 +183,22 @@ func readOrCreatePrivateKey(file string, random io.Reader, bits int) (*rsa.Priva
 	}
 }
 
-// readOrEmptyFile returns bytes and errors from os.ReadFile or (nil, nil) if the
+// readOrEmptyFile returns bytes and errors from os.OpenFile or (nil, nil) if the
 // file does not exist.
 func readOrEmptyFile(file string) ([]byte, error) {
-	raw, err := os.ReadFile(file)
-	if err == nil {
-		return raw, nil
+	fp, err := os.Open(file)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	if os.IsNotExist(err) {
-		return nil, nil
+	defer func() { _ = fp.Close() }()
+	// add hard limit
+	limitReader := io.LimitReader(fp, readLimit)
+	raw, err := io.ReadAll(limitReader)
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+	return raw, nil
 }
