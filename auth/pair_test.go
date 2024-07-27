@@ -1,29 +1,26 @@
 package auth
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"github.com/1f349/mjwt"
-	"github.com/1f349/mjwt/claims"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestCreateTokenPair(t *testing.T) {
 	t.Parallel()
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	assert.NoError(t, err)
 
-	ps := claims.NewPermStorage()
+	ps := NewPermStorage()
 	ps.Set("mjwt:test")
 	ps.Set("mjwt:test2")
 
-	s := mjwt.NewMJwtSigner("mjwt.test", key)
+	kStore := mjwt.NewKeyStore()
+	s, err := mjwt.NewIssuerWithKeyStore("mjwt.test", "key2", kStore)
+	assert.NoError(t, err)
 
 	accessToken, refreshToken, err := CreateTokenPair(s, "1", "test", "test2", nil, nil, ps)
 	assert.NoError(t, err)
 
-	_, b, err := mjwt.ExtractClaims[AccessTokenClaims](s, accessToken)
+	_, b, err := mjwt.ExtractClaims[AccessTokenClaims](kStore, accessToken)
 	assert.NoError(t, err)
 	assert.Equal(t, "1", b.Subject)
 	assert.Equal(t, "test", b.ID)
@@ -31,38 +28,7 @@ func TestCreateTokenPair(t *testing.T) {
 	assert.True(t, b.Claims.Perms.Has("mjwt:test2"))
 	assert.False(t, b.Claims.Perms.Has("mjwt:test3"))
 
-	_, b2, err := mjwt.ExtractClaims[RefreshTokenClaims](s, refreshToken)
-	assert.NoError(t, err)
-	assert.Equal(t, "1", b2.Subject)
-	assert.Equal(t, "test2", b2.ID)
-}
-
-func TestCreateTokenPairWithKID(t *testing.T) {
-	t.Parallel()
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	assert.NoError(t, err)
-
-	kStore := mjwt.NewMJwtKeyStore()
-	kStore.SetKey("test", key)
-
-	ps := claims.NewPermStorage()
-	ps.Set("mjwt:test")
-	ps.Set("mjwt:test2")
-
-	s := mjwt.NewMJwtSignerWithKeyStore("mjwt.test", nil, kStore)
-
-	accessToken, refreshToken, err := CreateTokenPairWithKID(s, "1", "test", "test2", nil, nil, ps, "test")
-	assert.NoError(t, err)
-
-	_, b, err := mjwt.ExtractClaims[AccessTokenClaims](s, accessToken)
-	assert.NoError(t, err)
-	assert.Equal(t, "1", b.Subject)
-	assert.Equal(t, "test", b.ID)
-	assert.True(t, b.Claims.Perms.Has("mjwt:test"))
-	assert.True(t, b.Claims.Perms.Has("mjwt:test2"))
-	assert.False(t, b.Claims.Perms.Has("mjwt:test3"))
-
-	_, b2, err := mjwt.ExtractClaims[RefreshTokenClaims](s, refreshToken)
+	_, b2, err := mjwt.ExtractClaims[RefreshTokenClaims](kStore, refreshToken)
 	assert.NoError(t, err)
 	assert.Equal(t, "1", b2.Subject)
 	assert.Equal(t, "test2", b2.ID)

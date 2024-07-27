@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"github.com/1f349/mjwt"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -10,35 +8,15 @@ import (
 
 func TestCreateRefreshToken(t *testing.T) {
 	t.Parallel()
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	assert.NoError(t, err)
 
-	s := mjwt.NewMJwtSigner("mjwt.test", key)
+	kStore := mjwt.NewKeyStore()
+	s, err := mjwt.NewIssuerWithKeyStore("mjwt.test", "key1", kStore)
+	assert.NoError(t, err)
 
 	refreshToken, err := CreateRefreshToken(s, "1", "test", "test2", nil)
 	assert.NoError(t, err)
 
-	_, b, err := mjwt.ExtractClaims[RefreshTokenClaims](s, refreshToken)
-	assert.NoError(t, err)
-	assert.Equal(t, "1", b.Subject)
-	assert.Equal(t, "test", b.ID)
-	assert.Equal(t, "test2", b.Claims.AccessTokenId)
-}
-
-func TestCreateRefreshTokenWithKID(t *testing.T) {
-	t.Parallel()
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	assert.NoError(t, err)
-
-	kStore := mjwt.NewMJwtKeyStore()
-	kStore.SetKey("test", key)
-
-	s := mjwt.NewMJwtSignerWithKeyStore("mjwt.test", nil, kStore)
-
-	refreshToken, err := CreateRefreshTokenWithKID(s, "1", "test", "test2", nil, "test")
-	assert.NoError(t, err)
-
-	_, b, err := mjwt.ExtractClaims[RefreshTokenClaims](s, refreshToken)
+	_, b, err := mjwt.ExtractClaims[RefreshTokenClaims](kStore, refreshToken)
 	assert.NoError(t, err)
 	assert.Equal(t, "1", b.Subject)
 	assert.Equal(t, "test", b.ID)

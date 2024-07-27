@@ -1,7 +1,7 @@
-package claims
+package mjwt
 
 // EmptyClaims contains no claims
-type EmptyClaims struct {}
+type EmptyClaims struct{}
 
 func (e EmptyClaims) Valid() error { return nil }
 

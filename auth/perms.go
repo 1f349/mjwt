@@ -1,4 +1,4 @@
-package claims
+package auth
 
 import (
 	"bufio"

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/1f349/mjwt"
 	"github.com/1f349/mjwt/auth"
-	"github.com/1f349/mjwt/claims"
 	"github.com/1f349/rsa-helper/rsaprivate"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/subcommands"
@@ -35,7 +34,7 @@ func (s *accessCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&s.id, "id", "", "MJWT ID")
 	f.StringVar(&s.audience, "aud", "", "Comma separated audience items for the MJWT")
 	f.StringVar(&s.duration, "dur", "15m", "Duration for the MJWT (default: 15m)")
-	f.StringVar(&s.kID, "kid", "\x00", "The Key ID of the signing key")
+	f.StringVar(&s.kID, "kid", "", "The Key ID of the signing key")
 }
 
 func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -51,7 +50,7 @@ func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}
 		return subcommands.ExitFailure
 	}
 
-	ps := claims.NewPermStorage()
+	ps := auth.NewPermStorage()
 	for i := 1; i < len(args); i++ {
 		ps.Set(args[i])
 	}
@@ -67,16 +66,16 @@ func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}
 	}
 
 	var token string
-	if s.kID == "\x00" {
-		signer := mjwt.NewMJwtSigner(s.issuer, key)
-		token, err = signer.GenerateJwt(s.subject, s.id, aud, dur, auth.AccessTokenClaims{Perms: ps})
-	} else {
-		kStore := mjwt.NewMJwtKeyStore()
-		kStore.SetKey(s.kID, key)
-		signer := mjwt.NewMJwtSignerWithKeyStore(s.issuer, nil, kStore)
-		token, err = signer.GenerateJwtWithKID(s.subject, s.id, aud, dur, auth.AccessTokenClaims{Perms: ps}, s.kID)
+
+	kStore := mjwt.NewKeyStore()
+	kStore.LoadPrivateKey(s.kID, key)
+
+	issuer, err := mjwt.NewIssuerWithKeyStore(s.issuer, s.kID, kStore)
+	if err != nil {
+		panic("this should not fail")
 	}
 
+	token, err = issuer.GenerateJwt(s.subject, s.id, aud, dur, auth.AccessTokenClaims{Perms: ps})
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, "Error: Failed to generate MJWT token: ", err)
 		return subcommands.ExitFailure

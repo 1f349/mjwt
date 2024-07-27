@@ -10,11 +10,11 @@ import (
 var ErrClaimTypeMismatch = errors.New("claim type mismatch")
 
 // wrapClaims creates a BaseTypeClaims wrapper for a generic claims struct
-func wrapClaims[T Claims](p Signer, sub, id string, aud jwt.ClaimStrings, dur time.Duration, claims T) *BaseTypeClaims[T] {
+func wrapClaims[T Claims](sub, id, issuer string, aud jwt.ClaimStrings, dur time.Duration, claims T) *BaseTypeClaims[T] {
 	now := time.Now()
 	return (&BaseTypeClaims[T]{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    p.Issuer(),
+			Issuer:    issuer,
 			Subject:   sub,
 			Audience:  aud,
 			ExpiresAt: jwt.NewNumericDate(now.Add(dur)),
@@ -28,12 +28,12 @@ func wrapClaims[T Claims](p Signer, sub, id string, aud jwt.ClaimStrings, dur ti
 
 // ExtractClaims uses a Verifier to validate the MJWT token and returns the parsed
 // token and BaseTypeClaims
-func ExtractClaims[T Claims](p Verifier, token string) (*jwt.Token, BaseTypeClaims[T], error) {
+func ExtractClaims[T Claims](ks *KeyStore, token string) (*jwt.Token, BaseTypeClaims[T], error) {
 	b := BaseTypeClaims[T]{
 		RegisteredClaims: jwt.RegisteredClaims{},
 		Claims:           *new(T),
 	}
-	tok, err := p.VerifyJwt(token, &b)
+	tok, err := ks.VerifyJwt(token, &b)
 	return tok, b, err
 }
 
