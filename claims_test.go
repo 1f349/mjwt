@@ -2,6 +2,7 @@ package mjwt
 
 import (
 	"fmt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -35,7 +36,7 @@ func TestExtractClaims(t *testing.T) {
 
 	t.Run("TestNoKID", func(t *testing.T) {
 		t.Parallel()
-		s, err := NewIssuerWithKeyStore("mjwt.test", "key1", kStore)
+		s, err := NewIssuerWithKeyStore("mjwt.test", "key1", jwt.SigningMethodRS512, kStore)
 		assert.NoError(t, err)
 		token, err := s.GenerateJwt("1", "test", nil, 10*time.Minute, testClaims{TestValue: "hello"})
 		assert.NoError(t, err)
@@ -48,9 +49,9 @@ func TestExtractClaims(t *testing.T) {
 
 	t.Run("TestKID", func(t *testing.T) {
 		t.Parallel()
-		s, err := NewIssuerWithKeyStore("mjwt.test", "key2", kStore)
+		s, err := NewIssuerWithKeyStore("mjwt.test", "key2", jwt.SigningMethodRS512, kStore)
 		assert.NoError(t, err)
-		s2, err := NewIssuerWithKeyStore("mjwt.test", "key3", kStore)
+		s2, err := NewIssuerWithKeyStore("mjwt.test", "key3", jwt.SigningMethodRS512, kStore)
 		assert.NoError(t, err)
 
 		token1, err := s.GenerateJwt("1", "test", nil, 10*time.Minute, testClaims{TestValue: "hello"})
@@ -72,7 +73,7 @@ func TestExtractClaimsFail(t *testing.T) {
 
 	t.Run("TestInvalidClaims", func(t *testing.T) {
 		t.Parallel()
-		s, err := NewIssuerWithKeyStore("mjwt.test", "key1", kStore)
+		s, err := NewIssuerWithKeyStore("mjwt.test", "key1", jwt.SigningMethodRS512, kStore)
 		assert.NoError(t, err)
 		token, err := s.GenerateJwt("1", "test", nil, 10*time.Minute, testClaims{TestValue: "test"})
 		assert.NoError(t, err)
@@ -85,7 +86,7 @@ func TestExtractClaimsFail(t *testing.T) {
 	t.Run("TestKIDNonExist", func(t *testing.T) {
 		t.Parallel()
 
-		s, err := NewIssuerWithKeyStore("mjwt.test", "key2", kStore)
+		s, err := NewIssuerWithKeyStore("mjwt.test", "key2", jwt.SigningMethodRS512, kStore)
 		assert.NoError(t, err)
 		token, err := s.GenerateJwt("1", "test", nil, 10*time.Minute, testClaims{TestValue: "test"})
 		assert.NoError(t, err)

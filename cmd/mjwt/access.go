@@ -70,7 +70,7 @@ func (s *accessCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}
 	kStore := mjwt.NewKeyStore()
 	kStore.LoadPrivateKey(s.kID, key)
 
-	issuer, err := mjwt.NewIssuerWithKeyStore(s.issuer, s.kID, kStore)
+	issuer, err := mjwt.NewIssuerWithKeyStore(s.issuer, s.kID, jwt.SigningMethodRS512, kStore)
 	if err != nil {
 		panic("this should not fail")
 	}

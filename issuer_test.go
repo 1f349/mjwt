@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"github.com/1f349/rsa-helper/rsaprivate"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -14,7 +15,7 @@ func TestNewIssuer(t *testing.T) {
 	t.Run("generate missing key for issuer", func(t *testing.T) {
 		t.Parallel()
 		kStore := NewKeyStore()
-		issuer, err := NewIssuerWithKeyStore("Test", "test", kStore)
+		issuer, err := NewIssuerWithKeyStore("Test", "test", jwt.SigningMethodRS512, kStore)
 		assert.NoError(t, err)
 		assert.True(t, kStore.HasPrivateKey("test"))
 		assert.True(t, kStore.HasPublicKey("test"))
@@ -27,7 +28,7 @@ func TestNewIssuer(t *testing.T) {
 		key, err := rsa.GenerateKey(rand.Reader, 2048)
 		assert.NoError(t, err)
 		kStore.LoadPrivateKey("test", key)
-		issuer, err := NewIssuerWithKeyStore("Test", "test", kStore)
+		issuer, err := NewIssuerWithKeyStore("Test", "test", jwt.SigningMethodRS512, kStore)
 		assert.NoError(t, err)
 		assert.True(t, kStore.HasPrivateKey("test"))
 		assert.True(t, kStore.HasPublicKey("test"))
@@ -41,7 +42,7 @@ func TestNewIssuer(t *testing.T) {
 		t.Parallel()
 		dir := afero.NewMemMapFs()
 		kStore := NewKeyStoreWithDir(dir)
-		issuer, err := NewIssuerWithKeyStore("Test", "test", kStore)
+		issuer, err := NewIssuerWithKeyStore("Test", "test", jwt.SigningMethodRS512, kStore)
 		assert.NoError(t, err)
 		assert.True(t, kStore.HasPrivateKey("test"))
 		assert.True(t, kStore.HasPublicKey("test"))

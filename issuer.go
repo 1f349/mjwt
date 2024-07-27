@@ -10,15 +10,16 @@ import (
 type Issuer struct {
 	issuer   string
 	kid      string
+	signing  jwt.SigningMethod
 	keystore *KeyStore
 }
 
-func NewIssuer(name, kid string) (*Issuer, error) {
-	return NewIssuerWithKeyStore(name, kid, NewKeyStore())
+func NewIssuer(name, kid string, signing jwt.SigningMethod) (*Issuer, error) {
+	return NewIssuerWithKeyStore(name, kid, signing, NewKeyStore())
 }
 
-func NewIssuerWithKeyStore(name, kid string, keystore *KeyStore) (*Issuer, error) {
-	i := &Issuer{name, kid, keystore}
+func NewIssuerWithKeyStore(name, kid string, signing jwt.SigningMethod, keystore *KeyStore) (*Issuer, error) {
+	i := &Issuer{name, kid, signing, keystore}
 	if i.keystore.HasPrivateKey(kid) {
 		return i, nil
 	}
@@ -39,7 +40,7 @@ func (i *Issuer) SignJwt(wrapped jwt.Claims) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS512, wrapped)
+	token := jwt.NewWithClaims(i.signing, wrapped)
 	token.Header["kid"] = i.kid
 	return token.SignedString(key)
 }

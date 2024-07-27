@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/1f349/mjwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -10,7 +11,7 @@ func TestCreateRefreshToken(t *testing.T) {
 	t.Parallel()
 
 	kStore := mjwt.NewKeyStore()
-	s, err := mjwt.NewIssuerWithKeyStore("mjwt.test", "key1", kStore)
+	s, err := mjwt.NewIssuerWithKeyStore("mjwt.test", "key1", jwt.SigningMethodRS512, kStore)
 	assert.NoError(t, err)
 
 	refreshToken, err := CreateRefreshToken(s, "1", "test", "test2", nil)
