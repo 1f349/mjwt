@@ -48,3 +48,7 @@ func (i *Issuer) SignJwt(wrapped jwt.Claims) (string, error) {
 func (i *Issuer) PrivateKey() (*rsa.PrivateKey, error) {
 	return i.keystore.GetPrivateKey(i.kid)
 }
+
+func (i *Issuer) KeyStore() *KeyStore {
+	return i.keystore
+}
