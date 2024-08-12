@@ -6,6 +6,7 @@ import (
 	"io"
 )
 
+// WriteJwkSetJson outputs the public keys used by the Issuers
 func WriteJwkSetJson(w io.Writer, issuers []*Issuer) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
