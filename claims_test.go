@@ -2,7 +2,7 @@ package mjwt
 
 import (
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -10,7 +10,7 @@ import (
 
 type testClaims struct{ TestValue string }
 
-func (t testClaims) Valid() error {
+func (t testClaims) Validate() error {
 	if t.TestValue != "hello" && t.TestValue != "world" {
 		return fmt.Errorf("TestValue should be hello")
 	}
@@ -21,7 +21,7 @@ func (t testClaims) Type() string { return "testClaims" }
 
 type testClaims2 struct{ TestValue2 string }
 
-func (t testClaims2) Valid() error {
+func (t testClaims2) Validate() error {
 	if t.TestValue2 != "world" {
 		return fmt.Errorf("TestValue2 should be world")
 	}

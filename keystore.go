@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/1f349/rsa-helper/rsaprivate"
 	"github.com/1f349/rsa-helper/rsapublic"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/afero"
 	"golang.org/x/sync/errgroup"
 	"io/fs"
@@ -217,7 +217,7 @@ func (k *KeyStore) VerifyJwt(token string, claims baseTypeClaim) (*jwt.Token, er
 	if err != nil {
 		return nil, err
 	}
-	return withClaims, claims.Valid()
+	return withClaims, nil
 }
 
 // SaveSingleKey writes the rsa.PrivateKey/rsa.PublicKey for the requested KID to

@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"github.com/1f349/rsa-helper/rsaprivate"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"testing"

@@ -2,7 +2,7 @@ package mjwt
 
 import (
 	"encoding/json"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -39,8 +39,8 @@ func ExtractClaims[T Claims](ks *KeyStore, token string) (*jwt.Token, BaseTypeCl
 
 // Claims is a wrapper for jwt.Claims and adds a Type method to name internal claim structs
 type Claims interface {
-	jwt.Claims
 	Type() string
+	Validate() error
 }
 
 type baseTypeClaim interface {
@@ -61,15 +61,12 @@ func (b *BaseTypeClaims[T]) init() *BaseTypeClaims[T] {
 	return b
 }
 
-// Valid checks the InternalClaimType matches and the type claim type
-func (b *BaseTypeClaims[T]) Valid() error {
-	if err := b.RegisteredClaims.Valid(); err != nil {
-		return err
-	}
+// Validate checks the InternalClaimType matches and the type claim type
+func (b *BaseTypeClaims[T]) Validate() error {
 	if b.ClaimType != b.InternalClaimType() {
 		return ErrClaimTypeMismatch
 	}
-	return b.Claims.Valid()
+	return b.Claims.Validate()
 }
 
 // InternalClaimType returns the Type of the generic claim struct

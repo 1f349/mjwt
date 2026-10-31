@@ -2,7 +2,7 @@ package auth
 
 import (
 	"github.com/1f349/mjwt"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
 
@@ -11,7 +11,7 @@ type AccessTokenClaims struct {
 	Perms *PermStorage `json:"per"`
 }
 
-func (a AccessTokenClaims) Valid() error { return nil }
+func (a AccessTokenClaims) Validate() error { return nil }
 
 func (a AccessTokenClaims) Type() string { return "access-token" }
 

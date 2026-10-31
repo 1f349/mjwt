@@ -3,7 +3,7 @@ package mjwt
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
 
